@@ -30,6 +30,15 @@ import {
   CHANGE_PAGE,
   GET_CURRENT_USER_BEGIN,
   GET_CURRENT_USER_SUCCESS,
+  APPLY_TO_JOB_BEGIN,
+  APPLY_TO_JOB_SUCCESS,
+  APPLY_TO_JOB_ERROR,
+  GET_PUBLIC_JOBS_BEGIN,
+  GET_PUBLIC_JOBS_SUCCESS,
+  GET_APPLICATIONS_BEGIN,
+  GET_APPLICATIONS_SUCCESS,
+  UPDATE_APPLICATION_STATUS_BEGIN,
+  UPDATE_APPLICATION_STATUS_SUCCESS,
 } from "./actions";
 
 import { initialState } from './appContext.js';
@@ -176,6 +185,8 @@ function reducer(state, action) {
         jobLocation: state.userLocation,
         jobType: 'full-time',
         status: 'pending',
+        isPublic: false,
+        requirements: '',
       };
 
       return {
@@ -185,7 +196,7 @@ function reducer(state, action) {
     }
 
     case CREATE_JOB_BEGIN: {
-      return{
+      return {
         ...state,
         isLoading: true
       };
@@ -230,12 +241,12 @@ function reducer(state, action) {
     }
 
     case SET_EDIT_JOB: {
-      const job = Object.values(state.jobs).find( (job) => 
+      const job = Object.values(state.jobs).find((job) =>
         job._id === action.payload.jobId
       );
 
       const {
-        _id, position, company, jobLocation, jobType, status
+        _id, position, company, jobLocation, jobType, status, isPublic, requirements
       } = job;
 
       return {
@@ -247,6 +258,8 @@ function reducer(state, action) {
         jobLocation,
         jobType,
         status,
+        isPublic,
+        requirements,
       };
     }
 
@@ -291,7 +304,7 @@ function reducer(state, action) {
         showAlert: false,
       };
     }
-    
+
     case SHOW_STATS_SUCCESS: {
       return {
         ...state,
@@ -333,6 +346,60 @@ function reducer(state, action) {
         user: action.payload.user,
         userLocation: action.payload.location,
         jobLocation: action.payload.location,
+      };
+    }
+
+    case APPLY_TO_JOB_BEGIN: {
+      return { ...state, isLoading: true };
+    }
+    case APPLY_TO_JOB_SUCCESS: {
+      return {
+        ...state,
+        isLoading: false,
+        showAlert: true,
+        alertType: 'success',
+        alertText: 'Applied Successfully!',
+      };
+    }
+    case APPLY_TO_JOB_ERROR: {
+      return {
+        ...state,
+        isLoading: false,
+        showAlert: true,
+        alertType: 'danger',
+        alertText: action.payload.msg,
+      };
+    }
+    case GET_PUBLIC_JOBS_BEGIN: {
+      return { ...state, isLoading: true, showAlert: false };
+    }
+    case GET_PUBLIC_JOBS_SUCCESS: {
+      return {
+        ...state,
+        isLoading: false,
+        publicJobs: action.payload.jobs,
+      };
+    }
+    case GET_APPLICATIONS_BEGIN: {
+      return { ...state, isLoading: true, showAlert: false };
+    }
+    case GET_APPLICATIONS_SUCCESS: {
+      return {
+        ...state,
+        isLoading: false,
+        [action.payload.target]: action.payload.applications,
+      };
+    }
+    case UPDATE_APPLICATION_STATUS_BEGIN: {
+      return { ...state, isLoading: true };
+    }
+    case UPDATE_APPLICATION_STATUS_SUCCESS: {
+      return {
+        ...state,
+        isLoading: false,
+        showAlert: true,
+        alertType: 'success',
+        alertText: 'Status Updated!',
       };
     }
 

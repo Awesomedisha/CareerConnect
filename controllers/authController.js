@@ -7,20 +7,20 @@ import xssFilters from 'xss-filters';
 const oneDay = 1000 * 60 * 60 * 24;
 
 const register = async (req, res) => {
-  const { name, email, password } = req.body;
+  const { name, email, password, role } = req.body;
 
   if (!name || !email || !password) {
     // next(new Error());  // If not using http-status-codes
     throw new BadRequestError("Please provide all values");
   }
 
-  const userAlreadyExists = await User.findOne({email});
+  const userAlreadyExists = await User.findOne({ email });
 
-  if(userAlreadyExists){
+  if (userAlreadyExists) {
     throw new BadRequestError(`The email: ${email} is already in use.`);
   }
 
-  const user = await User.create({ name, email, password });
+  const user = await User.create({ name, email, password, role });
 
   const token = user.createToken();
 
@@ -36,7 +36,7 @@ const register = async (req, res) => {
       lastName: user.lastName,
       location: user.location,
       name: user.name
-    }, 
+    },
     location: user.location,
   });
 };
@@ -44,21 +44,21 @@ const register = async (req, res) => {
 const login = async (req, res) => {
   const { email, password } = req.body;
 
-  if(!email || !password) {
+  if (!email || !password) {
     throw new BadRequestError("Please provide all values");
   }
 
   // Get the user in db whose email matches with the one from request
   const user = await User.findOne({ email }).select('+password');
 
-  if(!user) {
+  if (!user) {
     throw new UnAuthenticatedError("Invalid Credentials");
   }
 
   // Compare password
   const isPasswordCorrect = await user.comparePassword(password);
 
-  if(!isPasswordCorrect) {
+  if (!isPasswordCorrect) {
     throw new UnAuthenticatedError("Invalid Credentials");
   }
 
@@ -71,48 +71,57 @@ const login = async (req, res) => {
 
   user.password = undefined;
 
-  res.status( StatusCodes.OK ).json({ 
+  res.status(StatusCodes.OK).json({
     user,
-    location: user.location 
+    location: user.location
   });
 };
 
 const updateUser = async (req, res) => {
-  const { email, name, lastName, location} = req.body;
+  const { email, name, lastName, location, role, bio, resume } = req.body;
 
-  if(!email || !name || !lastName || !location) {
+  if (!email || !name || !lastName || !location) {
     throw new BadRequestError("Please provide all values");
   }
 
-  const user = await User.findOne({_id: req.user.userId});
+  const user = await User.findOne({ _id: req.user.userId });
 
   // Sanitize the inputs before saving the updated info in the user
-  user.email = xssFilters.inHTMLData(email);
+  user.email = email;
   user.name = xssFilters.inHTMLData(name);
   user.lastName = xssFilters.inHTMLData(lastName);
   user.location = xssFilters.inHTMLData(location);
+  if (role) {
+    user.role = role;
+  }
+  if (bio !== undefined) {
+    user.bio = xssFilters.inHTMLData(bio);
+  }
+  if (resume !== undefined) {
+    user.resume = xssFilters.inHTMLData(resume);
+  }
 
   await user.save();
 
   const token = user.createToken();
-  
+
   res.cookie('token', token, {
     httpOnly: true,
     expires: new Date(Date.now() + oneDay),
     secure: process.env.NODE_ENV === 'production',
   });
 
-  res.status( StatusCodes.OK ).json({ 
-    user, 
-    location: user.location 
+  res.status(StatusCodes.OK).json({
+    user,
+    location: user.location
   });
 };
 
 const getCurrentUser = async (req, res) => {
   const user = await User.findOne({ _id: req.user.userId });
-  res.status(StatusCodes.OK).json({ 
-    user, 
-    location: user.location 
+  res.status(StatusCodes.OK).json({
+    user,
+    location: user.location
   });
 };
 

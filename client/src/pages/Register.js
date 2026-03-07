@@ -10,29 +10,31 @@ const initialState = {
   email: '',
   password: '',
   isMember: true,
+  role: 'seeker',
 }
 
 export default function Register() {
   const navigate = useNavigate();
   const [values, setValues] = useState(initialState);
   const { user, isLoading, showAlert, displayAlert, registerUser, loginUser } = useAppContext();
+  const roleOptions = ['seeker', 'hr'];
 
   const handleChange = (e) => {
-    setValues({...values, [e.target.name]: e.target.value });
+    setValues({ ...values, [e.target.name]: e.target.value });
   };
 
   const onSubmit = (e) => {
     e.preventDefault();
-    const { name, email, password, isMember } = values;
+    const { name, email, password, isMember, role } = values;
 
-    if( !email || !password || (!isMember && !name)){
+    if (!email || !password || (!isMember && !name)) {
       displayAlert();
-      return; 
+      return;
     }
 
-    const currentUser = { name, email, password };
+    const currentUser = { name, email, password, role };
 
-    if(isMember){
+    if (isMember) {
       loginUser(currentUser);
     } else {
       registerUser(currentUser);
@@ -44,7 +46,7 @@ export default function Register() {
   };
 
   useEffect(() => {
-    if(user){
+    if (user) {
       setTimeout(() => {
         navigate('/');
       }, 2500);
@@ -58,7 +60,7 @@ export default function Register() {
         <h3>{values.isMember ? "Log In" : "Register"}</h3>
         {showAlert && <Alert />}
 
-        { !values.isMember && (
+        {!values.isMember && (
           <FormRow
             type="text"
             name="name"
@@ -81,6 +83,28 @@ export default function Register() {
           handleChange={handleChange}
         />
 
+        {!values.isMember && (
+          <div className='form-row'>
+            <label htmlFor='role' className='form-label'>
+              role
+            </label>
+            <select
+              name='role'
+              value={values.role}
+              onChange={handleChange}
+              className='form-select'
+            >
+              {roleOptions.map((itemValue, index) => {
+                return (
+                  <option key={index} value={itemValue}>
+                    {itemValue}
+                  </option>
+                );
+              })}
+            </select>
+          </div>
+        )}
+
         <button type="submit" className="btn btn-block" disabled={isLoading}>submit</button>
 
         <p>
@@ -89,7 +113,7 @@ export default function Register() {
             type='button'
             onClick={toggleMember}
             className="member-btn">
-            { values.isMember ? 'Register' : 'Log In' }
+            {values.isMember ? 'Register' : 'Log In'}
           </button>
         </p>
 

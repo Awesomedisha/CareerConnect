@@ -2,6 +2,7 @@ import { IoBarChartSharp } from 'react-icons/io5';
 import { MdQueryStats } from 'react-icons/md';
 import { FaWpforms } from 'react-icons/fa';
 import { ImProfile } from 'react-icons/im';
+import { FaGlobeAmericas, FaBuilding } from 'react-icons/fa';
 
 const links = [
   {
@@ -27,6 +28,20 @@ const links = [
     text: 'profile',
     path: 'profile',
     icon: <ImProfile />,
+  },
+  {
+    id: 5,
+    text: 'hr dashboard',
+    path: 'hr-dashboard',
+    icon: <FaBuilding />,
+    role: 'hr',
+  },
+  {
+    id: 6,
+    text: 'job market',
+    path: 'job-market',
+    icon: <FaGlobeAmericas />,
+    role: 'seeker',
   },
 ];
 

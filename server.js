@@ -15,6 +15,7 @@ import connectDB from './db/connect.js';
 // Routers
 import authRouter from './routes/authRoutes.js';
 import jobsRouter from './routes/jobsRoutes.js';
+import applicationsRouter from './routes/applicationsRoutes.js';
 
 // Middleware
 import notFoundMiddleware from './middleware/not-found.js';
@@ -33,7 +34,7 @@ import mongoSanitize from 'express-mongo-sanitize';
 // Cookie Parser
 import cookieParser from 'cookie-parser';
 
-if(process.env.NODE_ENV !== 'production'){
+if (process.env.NODE_ENV !== 'production') {
   app.use(morgan('dev'));
 }
 
@@ -55,9 +56,10 @@ app.get('/api/v1', (req, res) => {
 
 app.use('/api/v1/auth', authRouter);
 app.use('/api/v1/jobs', authenticateUser, jobsRouter);
+app.use('/api/v1/applications', authenticateUser, applicationsRouter);
 
 // Only for Deployment
-app.get('*', function(request, response){
+app.get('*', function (request, response) {
   response.sendFile(path.resolve(__dirname, './client/build', 'index.html'));
 });
 
@@ -67,15 +69,18 @@ app.use(errorHandlerMiddleware);
 const port = process.env.PORT || 4000;
 
 const start = async () => {
-  try{
+  try {
     await connectDB(process.env.MONGO_URL);
-    app.listen(port, () => { 
-      console.log(`Server is listening on port ${port}...`)
-    });
-
-  } catch(error){
+    if (!process.env.VERCEL) {
+      app.listen(port, () => {
+        console.log(`Server is listening on port ${port}...`)
+      });
+    }
+  } catch (error) {
     console.log(error);
   }
 };
 
 start();
+
+export default app;

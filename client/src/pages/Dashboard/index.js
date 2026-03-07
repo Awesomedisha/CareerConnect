@@ -3,6 +3,8 @@ import AllJobs from './AllJobs.js';
 import Profile from './Profile.js';
 import SharedLayout from './SharedLayout.js';
 import Stats from './Stats.js';
+import HRDashboard from './HRDashboard.js';
+import JobMarket from './JobMarket.js';
 
 export {
   AddJob,
@@ -10,4 +12,6 @@ export {
   Profile,
   SharedLayout,
   Stats,
+  HRDashboard,
+  JobMarket,
 }

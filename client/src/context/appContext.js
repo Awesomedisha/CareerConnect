@@ -2,7 +2,7 @@ import React from 'react';
 import { useReducer, useContext, useEffect } from 'react';
 import axios from 'axios';
 import reducer from './reducer';
-import { 
+import {
   DISPLAY_ALERT,
   CLEAR_ALERT,
   REGISTER_USER_BEGIN,
@@ -34,6 +34,15 @@ import {
   CHANGE_PAGE,
   GET_CURRENT_USER_BEGIN,
   GET_CURRENT_USER_SUCCESS,
+  APPLY_TO_JOB_BEGIN,
+  APPLY_TO_JOB_SUCCESS,
+  APPLY_TO_JOB_ERROR,
+  GET_PUBLIC_JOBS_BEGIN,
+  GET_PUBLIC_JOBS_SUCCESS,
+  GET_APPLICATIONS_BEGIN,
+  GET_APPLICATIONS_SUCCESS,
+  UPDATE_APPLICATION_STATUS_BEGIN,
+  UPDATE_APPLICATION_STATUS_SUCCESS,
 } from "./actions";
 
 const initialState = {
@@ -65,6 +74,13 @@ const initialState = {
   searchType: 'all',
   sort: 'latest',
   sortOptions: ['latest', 'oldest', 'a-z', 'z-a'],
+  isPublic: false,
+  requirements: '',
+  bio: '',
+  resume: '',
+  publicJobs: [],
+  userApplications: [],
+  hrApplications: [],
 }
 
 const AppContext = React.createContext();
@@ -79,17 +95,16 @@ export default function AppProvider(props) {
   });
 
   // Axios response interceptor
-  authFetch.interceptors.response.use( 
+  authFetch.interceptors.response.use(
     function (response) {
       return response;
-    }, 
+    },
     function (error) {
       console.log(`Error triggered in authFetch,
       Axios Response Interceptor
-      error: ${error}
-      error.response: ${error.response}`);
+      error: ${error}`);
 
-      if(error.response.status === 401){
+      if (error.response && error.response.status === 401) {
         console.log('Authentication Error');
         logoutUser();
       }
@@ -115,7 +130,7 @@ export default function AppProvider(props) {
 
   const registerUser = async (currentUser) => {
     dispatch({ type: REGISTER_USER_BEGIN });
-    try{
+    try {
 
       const response = await axios.post('/api/v1/auth/register', currentUser);
       const { user, location } = response.data;
@@ -124,12 +139,11 @@ export default function AppProvider(props) {
         type: REGISTER_USER_SUCCESS,
         payload: { user, location },
       });
-      
-    } catch(error){
 
-      dispatch( {
+    } catch (error) {
+      dispatch({
         type: REGISTER_USER_ERROR,
-        payload: { msg: error.response.data.msg },
+        payload: { msg: error.response?.data?.msg || "Something went wrong, please try again later" },
       })
     }
     clearAlert();
@@ -137,7 +151,7 @@ export default function AppProvider(props) {
 
   const loginUser = async (currentUser) => {
     dispatch({ type: LOGIN_USER_BEGIN });
-    try{
+    try {
       const { data } = await axios.post(
         '/api/v1/auth/login',
         currentUser
@@ -150,27 +164,31 @@ export default function AppProvider(props) {
         payload: { user, location },
       });
 
-    } catch(error){
-      dispatch( {
+    } catch (error) {
+      dispatch({
         type: LOGIN_USER_ERROR,
-        payload: { msg: error.response.data.msg },
+        payload: { msg: error.response?.data?.msg || "Something went wrong, please try again later" },
       })
     }
     clearAlert();
   };
 
   const logoutUser = async () => {
-    await authFetch.get('/auth/logout');
+    try {
+      await authFetch.get('/auth/logout');
+    } catch (error) {
+      console.log(error);
+    }
     dispatch({ type: LOGOUT_USER });
   };
-  
+
   const updateUser = async (currentUser) => {
-    
+
     dispatch({ type: UPDATE_USER_BEGIN });
-    
-    try{
+
+    try {
       const { data } = await authFetch.patch('/auth/updateUser', currentUser);
-      
+
       const { user, location } = data;
 
       dispatch({
@@ -178,8 +196,8 @@ export default function AppProvider(props) {
         payload: { user, location },
       });
 
-    } catch(error) {
-      if(error.response.status !== 401){
+    } catch (error) {
+      if (error.response && error.response.status !== 401) {
         dispatch({
           type: UPDATE_USER_ERROR,
           payload: { msg: error.response.data.msg },
@@ -192,14 +210,14 @@ export default function AppProvider(props) {
   const toggleSidebar = () => {
     dispatch({ type: TOGGLE_SIDEBAR });
   };
-  
+
   const handleChange = ({ name, value }) => {
     dispatch({
       type: HANDLE_CHANGE,
       payload: { name, value },
     });
   };
-  
+
   const clearValues = () => {
     dispatch({
       type: CLEAR_VALUES,
@@ -209,41 +227,45 @@ export default function AppProvider(props) {
   const createJob = async () => {
     dispatch({ type: CREATE_JOB_BEGIN });
 
-    try{
-      const { 
-        position, 
-        company, 
-        jobLocation, 
-        jobType, 
-        status 
+    try {
+      const {
+        position,
+        company,
+        jobLocation,
+        jobType,
+        status,
+        isPublic,
+        requirements
       } = state;
 
       await authFetch.post('/jobs', {
-        position, 
-        company, 
-        jobLocation, 
-        jobType, 
-        status 
+        position,
+        company,
+        jobLocation,
+        jobType,
+        status,
+        isPublic,
+        requirements
       });
 
       dispatch({ type: CREATE_JOB_SUCCESS });
       dispatch({ type: CLEAR_VALUES });
 
-    } catch(error){
-      if(error.response === 401) {
+    } catch (error) {
+      if (error.response?.status === 401) {
         return;
       }
 
       dispatch({
         type: CREATE_JOB_ERROR,
-        payload: { msg: error.response.data.msg },
+        payload: { msg: error.response?.data?.msg || "Something went wrong, please try again later" },
       });
     }
 
     clearAlert();
   };
 
-  
+
   const getJobs = async () => {
     // Destructure variables that deals with search parameters
     const { search, searchStatus, searchType, sort, page } = state;
@@ -251,12 +273,12 @@ export default function AppProvider(props) {
     // let url = `/jobs`;
     // let url = `/jobs?status=${searchStatus}&jobType=${searchType}&sort=${sort}`;
     let url = `/jobs?page=${page}&status=${searchStatus}&jobType=${searchType}&sort=${sort}`;
-    
+
     // If `search` is non-empty, appended it to the URL
-    if(search) {
+    if (search) {
       url = url + `&search=${search}`;
     }
-    
+
     dispatch({ type: GET_JOBS_BEGIN });
 
     try {
@@ -273,7 +295,7 @@ export default function AppProvider(props) {
         },
       });
 
-    } catch(error){
+    } catch (error) {
       console.log(`Error triggered in getJobs() appContext.js! 
       Here is the Error Response:
       ${error.response}`);
@@ -285,14 +307,14 @@ export default function AppProvider(props) {
   const setEditJob = async (jobId) => {
     dispatch({
       type: SET_EDIT_JOB,
-      payload: { jobId } 
+      payload: { jobId }
     });
   };
 
   const editJob = async () => {
     dispatch({ type: EDIT_JOB_BEGIN });
     try {
-      const { position, company, jobLocation, jobType, status } = state;
+      const { position, company, jobLocation, jobType, status, isPublic, requirements } = state;
 
       await authFetch.patch(`/jobs/${state.editJobId}`, {
         company,
@@ -300,19 +322,21 @@ export default function AppProvider(props) {
         jobLocation,
         jobType,
         status,
+        isPublic,
+        requirements,
       });
 
       dispatch({ type: EDIT_JOB_SUCCESS });
 
       dispatch({ type: CLEAR_VALUES });
 
-    } catch(error){
-      if(error.response.status === 401) {
+    } catch (error) {
+      if (error.response?.status === 401) {
         return;
       }
       dispatch({
         type: EDIT_JOB_ERROR,
-        payload: { msg: error.response.data.msg },
+        payload: { msg: error.response?.data?.msg || "Something went wrong, please try again later" },
       })
     }
     clearAlert();
@@ -324,7 +348,7 @@ export default function AppProvider(props) {
     try {
       await authFetch.delete(`/jobs/${jobId}`);
       getJobs();
-    } catch (error){
+    } catch (error) {
       console.log(error.response);
     }
   };
@@ -332,9 +356,9 @@ export default function AppProvider(props) {
   const showStats = async () => {
     dispatch({ type: SHOW_STATS_BEGIN });
     const url = '/jobs/stats';
-    try{
+    try {
       const { data } = await authFetch(url);
-  
+
       dispatch({
         type: SHOW_STATS_SUCCESS,
         payload: {
@@ -342,11 +366,11 @@ export default function AppProvider(props) {
           monthlyApplications: data.monthlyApplications,
         },
       })
-    } catch(error){
+    } catch (error) {
       console.log(error.response);
       logoutUser();
     }
-  
+
     clearAlert();
   };
 
@@ -361,11 +385,11 @@ export default function AppProvider(props) {
     });
   };
 
-  
+
   const getCurrentUser = async () => {
     dispatch({ type: GET_CURRENT_USER_BEGIN });
-    
-    try{
+
+    try {
       const { data } = await authFetch('/auth/getCurrentUser');
       const { user, location } = data;
 
@@ -374,12 +398,69 @@ export default function AppProvider(props) {
         payload: { user, location },
       });
 
-    } catch(error) {
-      if(error.response.status === 401) {
+    } catch (error) {
+      if (error.response && error.response.status === 401) {
         return;
       }
-      logoutUser();
+      dispatch({ type: LOGOUT_USER });
     }
+  };
+
+  const applyToJob = async (jobId) => {
+    dispatch({ type: APPLY_TO_JOB_BEGIN });
+    try {
+      await authFetch.post('/applications', { jobId });
+      dispatch({ type: APPLY_TO_JOB_SUCCESS });
+    } catch (error) {
+      dispatch({
+        type: APPLY_TO_JOB_ERROR,
+        payload: { msg: error.response?.data?.msg || "Something went wrong" },
+      });
+    }
+    clearAlert();
+  };
+
+  const getPublicJobs = async () => {
+    dispatch({ type: GET_PUBLIC_JOBS_BEGIN });
+    try {
+      const { data } = await authFetch.get('/jobs?isPublicListing=true');
+      const { jobs } = data;
+      dispatch({
+        type: GET_PUBLIC_JOBS_SUCCESS,
+        payload: { jobs },
+      });
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const getApplications = async (target, jobId = null) => {
+    dispatch({ type: GET_APPLICATIONS_BEGIN });
+    try {
+      let url = '/applications';
+      if (jobId) {
+        url = `/applications/${jobId}/applications`;
+      }
+      const { data } = await authFetch.get(url);
+      const { applications } = data;
+      dispatch({
+        type: GET_APPLICATIONS_SUCCESS,
+        payload: { applications, target },
+      });
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const updateApplicationStatus = async (applicationId, status) => {
+    dispatch({ type: UPDATE_APPLICATION_STATUS_BEGIN });
+    try {
+      await authFetch.patch(`/applications/${applicationId}`, { status });
+      dispatch({ type: UPDATE_APPLICATION_STATUS_SUCCESS });
+    } catch (error) {
+      console.log(error);
+    }
+    clearAlert();
   };
 
   useEffect(() => {
@@ -387,8 +468,8 @@ export default function AppProvider(props) {
   }, []);
 
   return (
-    <AppContext.Provider 
-      value = {{
+    <AppContext.Provider
+      value={{
         ...state,
         displayAlert,
         registerUser,
@@ -405,7 +486,11 @@ export default function AppProvider(props) {
         editJob,
         showStats,
         clearFilters,
-        changePage, 
+        changePage,
+        applyToJob,
+        getPublicJobs,
+        getApplications,
+        updateApplicationStatus,
       }}
     >
       {children}

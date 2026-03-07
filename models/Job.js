@@ -16,17 +16,17 @@ const JobSchema = new Schema({
     required: [true, 'Please provide position'],
     maxlength: 100,
   },
-  status:{
+  status: {
     type: String,
     enum: ['interview', 'declined', 'pending'],
     default: 'pending',
   },
-  jobType:{
+  jobType: {
     type: String,
     enum: ['full-time', 'part-time', 'remote', 'internship'],
     default: 'full-time',
   },
-  jobLocation:{
+  jobLocation: {
     type: String,
     default: 'my city',
     required: true,
@@ -35,7 +35,15 @@ const JobSchema = new Schema({
     type: mongoose.Types.ObjectId,
     ref: 'User',
     required: [true, 'Please provide the User'],
-  }, 
-}, { timestamps: true } );
+  },
+  isPublic: {
+    type: Boolean,
+    default: false,
+  },
+  requirements: {
+    type: String,
+    default: '',
+  },
+}, { timestamps: true });
 
 export default mongoose.model('Job', JobSchema);

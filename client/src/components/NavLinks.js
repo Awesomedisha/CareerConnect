@@ -1,18 +1,25 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import links from '../utils/links';
+import { useAppContext } from '../context/appContext';
 
 export default function NavLinks({ toggleSidebar }) {
+  const { user } = useAppContext();
+
   return (
     <div className='nav-links'>
       {links.map((link) => {
-        const { text, path, id, icon } = link;
+        const { text, path, id, icon, role } = link;
+
+        if (role && user && user.role !== role) {
+          return null;
+        }
 
         return (
           <NavLink
             to={path}
             key={id}
-            onClick={ toggleSidebar }
+            onClick={toggleSidebar}
             className={({ isActive }) =>
               isActive ? 'nav-link active' : 'nav-link'
             }

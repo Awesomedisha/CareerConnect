@@ -20,17 +20,20 @@ export default function AddJob() {
     clearValues,
     createJob,
     editJob,
+    user,
+    isPublic,
+    requirements,
   } = useAppContext();
 
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    if(!position || !company || !jobLocation){
+    if (!position || !company || !jobLocation) {
       displayAlert();
       return;
     }
 
-    if(isEditing){
+    if (isEditing) {
       editJob();
       return;
     }
@@ -41,7 +44,7 @@ export default function AddJob() {
   const handleJobInput = (e) => {
     const name = e.target.name;
     const value = e.target.value;
-    handleChange({name, value});
+    handleChange({ name, value });
   };
 
   return (
@@ -50,19 +53,19 @@ export default function AddJob() {
         <h3>{isEditing ? 'edit job' : 'add job'}</h3>
         {showAlert && <Alert />}
         <div className="form-center">
-          <FormRow 
+          <FormRow
             type="text"
             name="position"
             value={position}
             handleChange={handleJobInput}
           />
-          <FormRow 
+          <FormRow
             type="text"
             name="company"
             value={company}
             handleChange={handleJobInput}
           />
-          <FormRow 
+          <FormRow
             type="text"
             name="jobLocation"
             value={jobLocation}
@@ -70,7 +73,7 @@ export default function AddJob() {
             labelText='job location'
           />
 
-          <FormRowSelect 
+          <FormRowSelect
             name="status"
             value={status}
             handleChange={handleJobInput}
@@ -84,6 +87,39 @@ export default function AddJob() {
             handleChange={handleJobInput}
             list={jobTypeOptions}
           />
+
+          {user && user.role === 'hr' && (
+            <div className='form-row'>
+              <label htmlFor='isPublic' className='form-label'>
+                public listing
+              </label>
+              <input
+                type='checkbox'
+                name='isPublic'
+                id='isPublic'
+                checked={isPublic}
+                onChange={(e) => {
+                  handleChange({ name: e.target.name, value: e.target.checked });
+                }}
+                className='form-input'
+                style={{ width: 'auto', display: 'block' }}
+              />
+            </div>
+          )}
+
+          <div className='form-row'>
+            <label htmlFor='requirements' className='form-label'>
+              requirements
+            </label>
+            <textarea
+              name='requirements'
+              id='requirements'
+              value={requirements}
+              onChange={handleJobInput}
+              className='form-input'
+              style={{ height: '100px', width: '100%', padding: '0.5rem' }}
+            />
+          </div>
 
           <div className="btn-container">
             <button

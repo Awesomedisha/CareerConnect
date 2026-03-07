@@ -8,16 +8,19 @@ import xssFilters from 'xss-filters';
 
 const createJob = async (req, res) => {
   // 1. Extract values from the request body
-  const { position, company } = req.body;
+  const { position, company, isPublic } = req.body;
 
   // 2. Check if any of the values are empty
-  if(!position || !company) {
+  if (!position || !company) {
     throw new BadRequestError('Please Provide All Values');
   }
 
   // 3. Sanitize user inputs and save it to the request body
   req.body.company = xssFilters.inHTMLData(company);
   req.body.position = xssFilters.inHTMLData(position);
+  if (req.body.requirements) {
+    req.body.requirements = xssFilters.inHTMLData(req.body.requirements);
+  }
 
   // 4. Set the createdBy property for req.body to that of the user
   req.body.createdBy = req.user.userId;
@@ -31,23 +34,27 @@ const createJob = async (req, res) => {
 
 const getAllJobs = async (req, res) => {
   // 1. Destructure the necessary variables from request's query
-  const { search, status, jobType, sort } = req.query;
+  const { search, status, jobType, sort, isPublicListing } = req.query;
 
   // 2. Sanitize the search input from the query
   req.query.search = xssFilters.inHTMLData(search);
 
-  // 3. Create queryObject that keeps track of the user
-  const queryObject = { 
-    createdBy: req.user.userId,
-  };
+  // 3. Create queryObject
+  const queryObject = {};
+
+  if (isPublicListing === 'true') {
+    queryObject.isPublic = true;
+  } else {
+    queryObject.createdBy = req.user.userId;
+  }
 
   // 4. Set the status of the query if not `all`
-  if (status !== 'all'){
+  if (status !== 'all') {
     queryObject.status = status;
   }
 
   // 5. Set the jobType of the query if not 'all'
-  if (jobType !== 'all'){
+  if (jobType !== 'all') {
     queryObject.jobType = jobType;
   }
 
@@ -58,21 +65,21 @@ const getAllJobs = async (req, res) => {
 
   // 7. Find the jobs created by the user from the request (WITHOUT await)
   let result = Job.find(queryObject);
-  
+
   // 8. Chain sort conditions to filter results
-  if(sort === 'latest') {
+  if (sort === 'latest') {
     result = result.sort('-createdAt');
   }
-  
-  if(sort === 'oldest') {
+
+  if (sort === 'oldest') {
     result = result.sort('createdAt');
   }
-  
-  if(sort === 'a-z') {
+
+  if (sort === 'a-z') {
     result = result.sort('position');
   }
-  
-  if(sort === 'z-a') {
+
+  if (sort === 'z-a') {
     result = result.sort('-position');
   }
 
@@ -82,7 +89,7 @@ const getAllJobs = async (req, res) => {
   const skip = (page - 1) * limit;
 
   // 10. Chain operations to modify the query based on the page variables
-  result = result.skip(skip).limit(limit);  
+  result = result.skip(skip).limit(limit);
 
   // 11. Await filtered jobs by sort conditions & processed through pagination
   const jobs = await result;
@@ -91,11 +98,11 @@ const getAllJobs = async (req, res) => {
   const totalJobs = await Job.countDocuments(queryObject);
 
   // 13. Number of pages should accomodate the remainder with an extra page
-  const numOfPages = Math.ceil(totalJobs/limit);
+  const numOfPages = Math.ceil(totalJobs / limit);
 
   // 14. Respond with 200 and a json containing the jobs, totalJobs, and pages
   res.status(StatusCodes.OK)
-     .json({ jobs, totalJobs, numOfPages });
+    .json({ jobs, totalJobs, numOfPages });
 };
 
 const updateJob = async (req, res) => {
@@ -113,6 +120,9 @@ const updateJob = async (req, res) => {
   // 4. Sanitize user inputs and save it to the request body
   req.body.company = xssFilters.inHTMLData(company);
   req.body.position = xssFilters.inHTMLData(position);
+  if (req.body.requirements) {
+    req.body.requirements = xssFilters.inHTMLData(req.body.requirements);
+  }
 
   // 5. Find the job in the database
   const job = await Job.findOne({ _id: jobId });
@@ -126,13 +136,13 @@ const updateJob = async (req, res) => {
   checkPermissions(req.user, job.createdBy);
 
   // 8. Find and update the job, run validation & return a new document
-  const updatedJob = await Job.findOneAndUpdate({ _id: jobId}, req.body, {
+  const updatedJob = await Job.findOneAndUpdate({ _id: jobId }, req.body, {
     new: true,
     runValidators: true,
   });
 
   // 9. Send a 200 Response with a json of the newly updated job
-  res.status(StatusCodes.OK).json( { updatedJob });
+  res.status(StatusCodes.OK).json({ updatedJob });
 };
 
 const deleteJob = async (req, res) => {
@@ -143,7 +153,7 @@ const deleteJob = async (req, res) => {
   const job = await Job.findOne({ _id: jobId });
 
   // 3. Check if we found the job
-  if(!job){
+  if (!job) {
     throw new NotFoundError(`No job with id: ${jobId}`);
   }
 
@@ -176,29 +186,30 @@ const showStats = async (req, res) => {
   };
 
   let monthlyApplications = await Job.aggregate([
-    {$match: { createdBy: new mongoose.Types.ObjectId(req.user.userId) }},
-    {$group: {
-      _id: {
-        year: { 
-          $year: '$createdAt' 
+    { $match: { createdBy: new mongoose.Types.ObjectId(req.user.userId) } },
+    {
+      $group: {
+        _id: {
+          year: {
+            $year: '$createdAt'
+          },
+          month: {
+            $month: '$createdAt'
+          },
         },
-        month: { 
-          $month: '$createdAt' 
-        },
-      },
-      count: { $sum: 1 },
+        count: { $sum: 1 },
       },
     },
-    {$sort: { '_id.year': -1, '_id.month': -1 }},
-    {$limit: 6 },
+    { $sort: { '_id.year': -1, '_id.month': -1 } },
+    { $limit: 6 },
   ]);
-  
+
   monthlyApplications = monthlyApplications.map((item) => {
     const {
       _id: { year, month },
       count,
     } = item;
-    
+
     const date = moment()
       .month(month - 1)
       .year(year)
