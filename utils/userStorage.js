@@ -16,14 +16,14 @@ const ensureDataDir = () => {
         try {
             fs.mkdirSync(dir, { recursive: true });
         } catch (e) {
-            // Might fail on read-only serverless, but we handle it
+            // Read-only on serverless
         }
     }
     if (!fs.existsSync(USER_DATA_PATH)) {
         try {
             fs.writeFileSync(USER_DATA_PATH, JSON.stringify([]));
         } catch (e) {
-            // Might fail on read-only serverless
+            // Read-only on serverless
         }
     }
 };
@@ -31,56 +31,32 @@ const ensureDataDir = () => {
 export const saveUser = async (userData) => {
     let savedUser = null;
 
-    if (isServerless) {
-        // Platform preference: Try JSON first (even if transient)
+    // PRIMARY: MongoDB (Always the source of truth for persistence)
+    try {
+        savedUser = await User.create(userData);
+    } catch (error) {
+        console.error('CRITICAL: MongoDB save failed:', error.message);
+        // If on Localhost, we can still use JSON as a primary fallback
+        if (isServerless) {
+            throw new Error('Database connection failed in production. Registration aborted to prevent data loss.');
+        }
+    }
+
+    // SECONDARY: JSON (Local development backup only)
+    if (!isServerless) {
         try {
             ensureDataDir();
             const users = fs.existsSync(USER_DATA_PATH) ? JSON.parse(fs.readFileSync(USER_DATA_PATH, 'utf8')) : [];
             const newUser = {
                 ...userData,
-                _id: Date.now().toString(),
+                _id: savedUser ? savedUser._id : Date.now().toString(),
                 createdAt: new Date().toISOString()
             };
             users.push(newUser);
-            try {
-                fs.writeFileSync(USER_DATA_PATH, JSON.stringify(users, null, 2));
-                savedUser = newUser;
-            } catch (e) {
-                console.warn('JSON write failed (as expected on serverless):', e.message);
-            }
-        } catch (err) {
-            console.error('JSON logic failed:', err.message);
-        }
-
-        // Try MongoDB as backup if configured
-        if (!savedUser) {
-            try {
-                savedUser = await User.create(userData);
-            } catch (error) {
-                console.error('MongoDB backup save failed:', error.message);
-            }
-        }
-    } else {
-        // Local preference: MongoDB first
-        try {
-            savedUser = await User.create(userData);
-        } catch (error) {
-            console.warn('MongoDB save failed, falling back to JSON:', error.message);
-        }
-
-        // Backup to JSON
-        try {
-            ensureDataDir();
-            const users = JSON.parse(fs.readFileSync(USER_DATA_PATH, 'utf8'));
-            users.push({
-                ...userData,
-                _id: savedUser ? savedUser._id : Date.now().toString(),
-                createdAt: new Date().toISOString()
-            });
             fs.writeFileSync(USER_DATA_PATH, JSON.stringify(users, null, 2));
-            if (!savedUser) savedUser = users[users.length - 1];
+            if (!savedUser) savedUser = newUser;
         } catch (err) {
-            console.error('JSON save failed:', err.message);
+            console.warn('JSON backup failed (Local):', err.message);
         }
     }
 
@@ -88,8 +64,19 @@ export const saveUser = async (userData) => {
 };
 
 export const findUserByEmail = async (email) => {
-    if (isServerless) {
-        // Priority: JSON
+    // PRIMARY: MongoDB
+    try {
+        const user = await User.findOne({ email }).select('+password');
+        if (user) return user;
+    } catch (error) {
+        console.error('CRITICAL: MongoDB search failed:', error.message);
+        if (isServerless) {
+            throw new Error('Database connection failed in production.');
+        }
+    }
+
+    // SECONDARY: JSON fallback (Localhost only)
+    if (!isServerless) {
         try {
             if (fs.existsSync(USER_DATA_PATH)) {
                 const users = JSON.parse(fs.readFileSync(USER_DATA_PATH, 'utf8'));
@@ -97,34 +84,7 @@ export const findUserByEmail = async (email) => {
                 if (user) return user;
             }
         } catch (err) {
-            console.warn('JSON search failed:', err.message);
-        }
-
-        // Fallback: MongoDB
-        try {
-            const user = await User.findOne({ email }).select('+password');
-            if (user) return user;
-        } catch (error) {
-            console.error('MongoDB backup search failed:', error.message);
-        }
-    } else {
-        // Priority: MongoDB
-        try {
-            const user = await User.findOne({ email }).select('+password');
-            if (user) return user;
-        } catch (error) {
-            console.warn('MongoDB search failed, checking JSON:', error.message);
-        }
-
-        // Fallback: JSON
-        try {
-            if (fs.existsSync(USER_DATA_PATH)) {
-                const users = JSON.parse(fs.readFileSync(USER_DATA_PATH, 'utf8'));
-                const user = users.find(u => u.email === email);
-                if (user) return user;
-            }
-        } catch (err) {
-            console.error('JSON search failed:', err.message);
+            console.warn('JSON backup search failed (Local):', err.message);
         }
     }
 
