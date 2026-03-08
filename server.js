@@ -11,6 +11,7 @@ import morgan from 'morgan';
 
 // Database and Authentication
 import connectDB from './db/connect.js';
+import mongoose from 'mongoose';
 
 // Routers
 import authRouter from './routes/authRoutes.js';
@@ -35,7 +36,7 @@ import mongoSanitize from 'express-mongo-sanitize';
 // Cookie Parser
 import cookieParser from 'cookie-parser';
 
-const __serverDirname = dirname(fileURLToPath(import.meta.url));
+const PROJECT_ROOT = dirname(fileURLToPath(import.meta.url));
 const isServerless =
   process.env.VERCEL === '1' ||
   !!process.env.VERCEL ||
@@ -97,11 +98,11 @@ if (isServerless) {
 // Static Assets & Catch-all (Only when NOT on Serverless)
 // Platforms like Vercel/Netlify handle static assets via CDN
 if (!isServerless) {
-  const buildPath = path.resolve(__serverDirname, './client/build');
+  const buildPath = path.resolve(PROJECT_ROOT, './client/build');
   if (fs.existsSync(buildPath)) {
     app.use(express.static(buildPath));
     app.get('*', (req, res) => {
-      res.sendFile(path.resolve(__serverDirname, './client/build', 'index.html'));
+      res.sendFile(path.resolve(PROJECT_ROOT, './client/build', 'index.html'));
     });
   }
 }
