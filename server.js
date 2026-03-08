@@ -40,7 +40,11 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const isServerless = process.env.VERCEL === '1' || !!process.env.VERCEL || !!process.env.NETLIFY;
+const isServerless =
+  process.env.VERCEL === '1' ||
+  !!process.env.VERCEL ||
+  !!process.env.NETLIFY ||
+  !!process.env.LAMBDA_TASK_ROOT;
 
 app.use(express.json());
 app.use(cookieParser());
@@ -66,8 +70,19 @@ let dbConnected = false;
 if (isServerless) {
   app.use(async (req, res, next) => {
     if (!dbConnected) {
-      await connectDB(process.env.MONGO_URL);
-      dbConnected = true;
+      if (!process.env.MONGO_URL) {
+        console.error('CRITICAL ERROR: MONGO_URL environment variable is missing for serverless function.');
+        return res.status(500).json({ msg: 'Server configuration error: Database URL missing.' });
+      }
+      try {
+        console.log('Serverless: Attempting to connect to MongoDB...');
+        await connectDB(process.env.MONGO_URL);
+        dbConnected = true;
+        console.log('Serverless: MongoDB connected successfully.');
+      } catch (error) {
+        console.error('Serverless: MongoDB connection failed:', error);
+        return res.status(500).json({ msg: 'Database connection failed. Please check server logs.' });
+      }
     }
     next();
   });
