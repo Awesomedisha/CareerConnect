@@ -134,22 +134,30 @@ if (!isServerless) {
 app.use(notFoundMiddleware);
 app.use(errorHandlerMiddleware);
 
-const mongoUrl = process.env.MONGO_URL || process.env.MONGO_URI;
-
 const start = async () => {
   try {
-    // Only connect here if NOT in serverless middleware mode
+    if (!mongoUrl) {
+      console.error('CRITICAL: MONGO_URL/MONGO_URI is missing!');
+      if (!isServerless) throw new Error('MONGO_URL or MONGO_URI environment variable not found');
+      return;
+    }
+
+    // Only connect here if NOT in serverless middleware mode (which handles its own connection)
     if (!isServerless) {
-      if (!mongoUrl) {
-        throw new Error('Please provide MONGO_URL or MONGO_URI in .env file');
-      }
+      console.log('Localhost: Connecting to MongoDB...');
       await connectDB(mongoUrl);
+      console.log('Localhost: DB Connected.');
       app.listen(port, () => {
         console.log(`Server is listening on port ${port}...`);
       });
     }
   } catch (error) {
-    console.error('Startup Error:', error);
+    console.error('CRITICAL: Database connection failed!');
+    console.error('Error Details:', error.message);
+    if (isServerless) {
+      console.error('HINT: For Netlify/Vercel, ensure you have whitelisted 0.0.0.0/0 in MongoDB Atlas.');
+    }
+    if (!isServerless) process.exit(1);
   }
 };
 
