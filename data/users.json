@@ -1,0 +1,10 @@
+[
+  {
+    "name": "Test User",
+    "email": "test@example.com",
+    "password": "password123",
+    "role": "seeker",
+    "_id": "1772969919934",
+    "createdAt": "2026-03-08T11:38:39.934Z"
+  }
+]

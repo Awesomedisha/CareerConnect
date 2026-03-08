@@ -36,6 +36,7 @@ import mongoSanitize from 'express-mongo-sanitize';
 // Cookie Parser
 import cookieParser from 'cookie-parser';
 
+const port = process.env.PORT || 4000;
 const PROJECT_ROOT = dirname(fileURLToPath(import.meta.url));
 const isServerless =
   process.env.VERCEL === '1' ||
