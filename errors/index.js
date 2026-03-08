@@ -1,6 +1,8 @@
-import BadRequestError from "./bad-request.js";
-import NotFoundError from "./not-found.js";
-import UnAuthenticatedError from "./unauthenticated.js";
+import {
+  BadRequestError,
+  NotFoundError,
+  UnAuthenticatedError,
+} from "./api-errors.js";
 
 export {
   BadRequestError,
