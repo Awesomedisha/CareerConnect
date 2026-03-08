@@ -35,11 +35,7 @@ import mongoSanitize from 'express-mongo-sanitize';
 // Cookie Parser
 import cookieParser from 'cookie-parser';
 
-if (process.env.NODE_ENV !== 'production') {
-  app.use(morgan('dev'));
-}
-
-const __dirname = dirname(fileURLToPath(import.meta.url));
+const __serverDirname = dirname(fileURLToPath(import.meta.url));
 const isServerless =
   process.env.VERCEL === '1' ||
   !!process.env.VERCEL ||
@@ -51,7 +47,7 @@ app.use(cookieParser());
 app.use(helmet());
 app.use(mongoSanitize());
 
-if (process.env.NODE_ENV !== 'production' && !isServerless) {
+if (process.env.NODE_ENV !== 'production' || isServerless) {
   app.use(morgan('dev'));
 }
 
@@ -101,11 +97,11 @@ if (isServerless) {
 // Static Assets & Catch-all (Only when NOT on Serverless)
 // Platforms like Vercel/Netlify handle static assets via CDN
 if (!isServerless) {
-  const buildPath = path.resolve(__dirname, './client/build');
+  const buildPath = path.resolve(__serverDirname, './client/build');
   if (fs.existsSync(buildPath)) {
     app.use(express.static(buildPath));
     app.get('*', (req, res) => {
-      res.sendFile(path.resolve(__dirname, './client/build', 'index.html'));
+      res.sendFile(path.resolve(__serverDirname, './client/build', 'index.html'));
     });
   }
 }
