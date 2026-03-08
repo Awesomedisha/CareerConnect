@@ -166,5 +166,85 @@
     "role": "seeker",
     "_id": "1772972839355",
     "createdAt": "2026-03-08T12:27:19.355Z"
+  },
+  {
+    "name": "Disha Singh",
+    "email": "urdishasingh@gmail.com",
+    "password": "Disha123",
+    "role": "hr",
+    "_id": "1772974344957",
+    "createdAt": "2026-03-08T12:52:24.957Z"
+  },
+  {
+    "name": "Jagjeet Singh",
+    "email": "urjagjeetsingh@gmail.com",
+    "password": "H1a2r3t9@",
+    "role": "hr",
+    "_id": "1772974345158",
+    "createdAt": "2026-03-08T12:52:25.158Z"
+  },
+  {
+    "name": "Test Seeker 1",
+    "email": "test1@example.com",
+    "password": "password123",
+    "role": "seeker",
+    "_id": "1772974345358",
+    "createdAt": "2026-03-08T12:52:25.358Z"
+  },
+  {
+    "name": "Test HR 2",
+    "email": "test2@example.com",
+    "password": "password123",
+    "role": "hr",
+    "_id": "1772974345546",
+    "createdAt": "2026-03-08T12:52:25.546Z"
+  },
+  {
+    "name": "Test Seeker 3",
+    "email": "test3@example.com",
+    "password": "password123",
+    "role": "seeker",
+    "_id": "1772974345747",
+    "createdAt": "2026-03-08T12:52:25.747Z"
+  },
+  {
+    "name": "Test HR 4",
+    "email": "test4@example.com",
+    "password": "password123",
+    "role": "hr",
+    "_id": "1772974345945",
+    "createdAt": "2026-03-08T12:52:25.945Z"
+  },
+  {
+    "name": "Test Seeker 5",
+    "email": "test5@example.com",
+    "password": "password123",
+    "role": "seeker",
+    "_id": "1772974346145",
+    "createdAt": "2026-03-08T12:52:26.145Z"
+  },
+  {
+    "name": "Test HR 6",
+    "email": "test6@example.com",
+    "password": "password123",
+    "role": "hr",
+    "_id": "1772974346332",
+    "createdAt": "2026-03-08T12:52:26.332Z"
+  },
+  {
+    "name": "Test Seeker 7",
+    "email": "test7@example.com",
+    "password": "password123",
+    "role": "seeker",
+    "_id": "1772974346534",
+    "createdAt": "2026-03-08T12:52:26.534Z"
+  },
+  {
+    "name": "Test HR 8",
+    "email": "test8@example.com",
+    "password": "password123",
+    "role": "hr",
+    "_id": "1772974346731",
+    "createdAt": "2026-03-08T12:52:26.731Z"
   }
 ]
