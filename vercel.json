@@ -13,12 +13,7 @@
     },
     {
       "src": "/(.*)",
-      "dest": "/client/build/$1",
-      "check": true
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/client/build/index.html"
+      "dest": "server.js"
     }
   ]
 }
