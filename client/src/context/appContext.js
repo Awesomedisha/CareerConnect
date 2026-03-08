@@ -43,6 +43,9 @@ import {
   GET_APPLICATIONS_SUCCESS,
   UPDATE_APPLICATION_STATUS_BEGIN,
   UPDATE_APPLICATION_STATUS_SUCCESS,
+  GET_PREDICTED_FIT_BEGIN,
+  GET_PREDICTED_FIT_SUCCESS,
+  GET_PREDICTED_FIT_ERROR,
 } from "./actions";
 
 const initialState = {
@@ -74,10 +77,98 @@ const initialState = {
   searchType: 'all',
   sort: 'latest',
   sortOptions: ['latest', 'oldest', 'a-z', 'z-a'],
-  isPublic: false,
+  isPublic: true,
   requirements: '',
+  title: '',
+  jobRole: '',
+  jobCategory: '',
+  department: '',
+  jobId: '',
+  employmentType: '',
+  workMode: 'on-site',
+  locationCity: '',
+  locationState: '',
+  locationCountry: '',
+  locationAddress: '',
+  description: '',
+  responsibilities: '',
+  skillsRequired: '',
+  skillsPreferred: '',
+  techStack: '',
+  experienceMin: 0,
+  experienceMax: 0,
+  experienceLevel: 'entry',
+  educationRequired: '',
+  degreeRequired: '',
+  minimumCGPA: 0,
+  salaryMin: 0,
+  salaryMax: 0,
+  currency: 'USD',
+  salaryPeriod: 'monthly',
+  isNegotiable: false,
+  openings: 1,
+  benefits: '',
+  perks: '',
+  applicationMethod: '',
+  externalApplyLink: '',
+  applicationDeadline: '',
+  expectedJoiningDate: '',
+  interviewRounds: 1,
+  interviewProcess: '',
+  assessmentRequired: false,
+  isFeatured: false,
+  isUrgent: false,
+  tags: '',
   bio: '',
   resume: '',
+  firstName: '',
+  lastName: '',
+  fullName: '',
+  phone: '',
+  city: '',
+  state: '',
+  country: '',
+  profilePicture: '',
+  headline: '',
+  dateOfBirth: '',
+  gender: '',
+  portfolioUrl: '',
+  linkedinUrl: '',
+  githubUrl: '',
+  personalWebsite: '',
+  resumeUrl: '',
+  resumeFileName: '',
+  skills: [],
+  primarySkills: [],
+  secondarySkills: [],
+  techStackArr: [], // renamed to avoid conflict with job techStack
+  experienceYears: 0,
+  currentCompany: '',
+  currentJobTitle: '',
+  previousCompanies: [],
+  education: [],
+  degree: '',
+  specialization: '',
+  university: '',
+  graduationYear: '',
+  cgpa: 0,
+  certifications: [],
+  projects: [],
+  preferredJobRole: '',
+  preferredJobType: '',
+  preferredWorkMode: '',
+  expectedSalaryMin: 0,
+  expectedSalaryMax: 0,
+  salaryCurrency: 'USD',
+  preferredLocations: [],
+  noticePeriod: '',
+  immediateJoiner: false,
+  openToWork: true,
+  profileVisibility: 'public',
+  profileViews: 0,
+  recruiterContactCount: 0,
+  candidateId: '',
+  slug: '',
   publicJobs: [],
   userApplications: [],
   hrApplications: [],
@@ -245,7 +336,47 @@ export default function AppProvider(props) {
         jobType,
         status,
         isPublic,
-        requirements
+        requirements,
+        title: state.title,
+        jobRole: state.jobRole,
+        jobCategory: state.jobCategory,
+        department: state.department,
+        jobId: state.jobId,
+        employmentType: state.employmentType,
+        workMode: state.workMode,
+        locationCity: state.locationCity,
+        locationState: state.locationState,
+        locationCountry: state.locationCountry,
+        locationAddress: state.locationAddress,
+        description: state.description,
+        responsibilities: state.responsibilities,
+        skillsRequired: state.skillsRequired.split(',').map(s => s.trim()),
+        skillsPreferred: state.skillsPreferred.split(',').map(s => s.trim()),
+        techStack: state.techStack.split(',').map(s => s.trim()),
+        experienceMin: state.experienceMin,
+        experienceMax: state.experienceMax,
+        experienceLevel: state.experienceLevel,
+        educationRequired: state.educationRequired,
+        degreeRequired: state.degreeRequired,
+        minimumCGPA: state.minimumCGPA,
+        salaryMin: state.salaryMin,
+        salaryMax: state.salaryMax,
+        currency: state.currency,
+        salaryPeriod: state.salaryPeriod,
+        isNegotiable: state.isNegotiable,
+        openings: state.openings,
+        benefits: state.benefits.split(',').map(s => s.trim()),
+        perks: state.perks.split(',').map(s => s.trim()),
+        applicationMethod: state.applicationMethod,
+        externalApplyLink: state.externalApplyLink,
+        applicationDeadline: state.applicationDeadline,
+        expectedJoiningDate: state.expectedJoiningDate,
+        interviewRounds: state.interviewRounds,
+        interviewProcess: state.interviewProcess,
+        assessmentRequired: state.assessmentRequired,
+        isFeatured: state.isFeatured,
+        isUrgent: state.isUrgent,
+        tags: state.tags.split(',').map(s => s.trim()),
       });
 
       dispatch({ type: CREATE_JOB_SUCCESS });
@@ -447,6 +578,7 @@ export default function AppProvider(props) {
         type: GET_APPLICATIONS_SUCCESS,
         payload: { applications, target },
       });
+      return applications;
     } catch (error) {
       console.log(error);
     }
@@ -461,6 +593,21 @@ export default function AppProvider(props) {
       console.log(error);
     }
     clearAlert();
+  };
+
+  const getPredictedFit = async (jobId) => {
+    dispatch({ type: GET_PREDICTED_FIT_BEGIN });
+    try {
+      const { data } = await authFetch.post('/applications/predicted-fit', { jobId });
+      dispatch({ type: GET_PREDICTED_FIT_SUCCESS });
+      return data.aiFit;
+    } catch (error) {
+      dispatch({
+        type: GET_PREDICTED_FIT_ERROR,
+        payload: { msg: error.response?.data?.msg || "Could not get AI fit" },
+      });
+      clearAlert();
+    }
   };
 
   useEffect(() => {
@@ -491,6 +638,7 @@ export default function AppProvider(props) {
         getPublicJobs,
         getApplications,
         updateApplicationStatus,
+        getPredictedFit,
       }}
     >
       {children}

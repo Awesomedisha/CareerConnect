@@ -21,7 +21,27 @@ const ApplicationSchema = new mongoose.Schema(
             type: Number,
             default: 0,
         },
+        technicalFit: {
+            type: Number,
+            default: 0,
+        },
+        softSkillsFit: {
+            type: Number,
+            default: 0,
+        },
+        experienceFit: {
+            type: Number,
+            default: 0,
+        },
         aiFeedback: {
+            type: String,
+            default: '',
+        },
+        aiGapAnalysis: {
+            type: String,
+            default: '',
+        },
+        aiUpskillingSuggestions: {
             type: String,
             default: '',
         },

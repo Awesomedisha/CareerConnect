@@ -63,6 +63,49 @@ const Wrapper = styled.section`
       margin-top: 0;
     }
   }
+  .section-title {
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid var(--primary-500);
+    color: var(--primary-700);
+    grid-column: 1 / -1;
+    font-size: 1.25rem;
+    font-weight: 600;
+  }
+  .textarea-container {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    @media (min-width: 992px) {
+      grid-template-columns: 1fr 1fr;
+    }
+    @media (min-width: 1200px) {
+      grid-template-columns: 1fr 1fr 1fr;
+    }
+    grid-column: 1 / -1;
+  }
+  .text-area {
+    height: 120px;
+    resize: none;
+    width: 100%;
+    border: 1px solid var(--grey-200);
+    border-radius: var(--borderRadius);
+    padding: 0.5rem;
+    background: var(--grey-50);
+  }
+  .checkbox-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 1rem;
+    .checkbox {
+      width: 20px;
+      height: 20px;
+      cursor: pointer;
+    }
+  }
 `
 
 export default Wrapper

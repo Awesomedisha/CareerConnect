@@ -10,8 +10,9 @@ export default function NavLinks({ toggleSidebar }) {
     <div className='nav-links'>
       {links.map((link) => {
         const { text, path, id, icon, role } = link;
+        const userRole = user?.role || 'seeker';
 
-        if (role && user && user.role !== role) {
+        if (role && user && userRole !== role) {
           return null;
         }
 

@@ -20,9 +20,9 @@ export default function HRJobsContainer() {
 
     return (
         <Wrapper>
-            <h5>{publicJobsCount} public listing{publicJobsCount !== 1 && 's'} found</h5>
+            <h5>{jobs.length} job listing{jobs.length !== 1 && 's'} found</h5>
             <div className='jobs'>
-                {jobs.filter(j => j.isPublic).map((job) => {
+                {jobs.map((job) => {
                     return <HRJob key={job._id} {...job} />;
                 })}
             </div>

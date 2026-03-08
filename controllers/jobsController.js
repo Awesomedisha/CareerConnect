@@ -8,21 +8,32 @@ import xssFilters from 'xss-filters';
 
 const createJob = async (req, res) => {
   // 1. Extract values from the request body
-  const { position, company, isPublic } = req.body;
+  const { position, company } = req.body;
 
-  // 2. Check if any of the values are empty
   if (!position || !company) {
     throw new BadRequestError('Please Provide All Values');
   }
 
-  // 3. Sanitize user inputs and save it to the request body
-  req.body.company = xssFilters.inHTMLData(company);
-  req.body.position = xssFilters.inHTMLData(position);
-  if (req.body.requirements) {
-    req.body.requirements = xssFilters.inHTMLData(req.body.requirements);
+  // Generate slug if title or position is provided
+  if (req.body.title || position) {
+    const baseSlug = req.body.title || position;
+    req.body.slug = baseSlug.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, '');
   }
 
-  // 4. Set the createdBy property for req.body to that of the user
+  // Sanitize specific string fields
+  const stringFieldsToSanitize = [
+    'company', 'position', 'title', 'jobRole', 'jobCategory', 'department',
+    'locationCity', 'locationState', 'locationCountry', 'locationAddress',
+    'description', 'responsibilities', 'requirements', 'educationRequired',
+    'degreeRequired', 'applicationMethod', 'externalApplyLink', 'interviewProcess'
+  ];
+
+  stringFieldsToSanitize.forEach(field => {
+    if (req.body[field]) {
+      req.body[field] = xssFilters.inHTMLData(req.body[field]);
+    }
+  });
+
   req.body.createdBy = req.user.userId;
 
   // 5. Create the job in the database
@@ -49,12 +60,12 @@ const getAllJobs = async (req, res) => {
   }
 
   // 4. Set the status of the query if not `all`
-  if (status !== 'all') {
+  if (status && status !== 'all') {
     queryObject.status = status;
   }
 
   // 5. Set the jobType of the query if not 'all'
-  if (jobType !== 'all') {
+  if (jobType && jobType !== 'all') {
     queryObject.jobType = jobType;
   }
 
@@ -109,33 +120,26 @@ const updateJob = async (req, res) => {
   // 1. Extract job ID from the request
   const { id: jobId } = req.params;
 
-  // 2. Extract company and position from the request's body
-  const { company, position } = req.body;
+  // Sanitize input
+  const stringFieldsToSanitize = [
+    'company', 'position', 'title', 'jobRole', 'jobCategory', 'department',
+    'locationCity', 'locationState', 'locationCountry', 'locationAddress',
+    'description', 'responsibilities', 'requirements', 'educationRequired',
+    'degreeRequired', 'applicationMethod', 'externalApplyLink', 'interviewProcess'
+  ];
 
-  // 3. Check if any of these values are empty
-  if (!company || !position) {
-    throw new BadRequestError('Please Provide All Values');
+  stringFieldsToSanitize.forEach(field => {
+    if (req.body[field]) {
+      req.body[field] = xssFilters.inHTMLData(req.body[field]);
+    }
+  });
+
+  // Update slug if title or position changes
+  if (req.body.title || position) {
+    const baseSlug = req.body.title || position;
+    req.body.slug = baseSlug.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, '');
   }
 
-  // 4. Sanitize user inputs and save it to the request body
-  req.body.company = xssFilters.inHTMLData(company);
-  req.body.position = xssFilters.inHTMLData(position);
-  if (req.body.requirements) {
-    req.body.requirements = xssFilters.inHTMLData(req.body.requirements);
-  }
-
-  // 5. Find the job in the database
-  const job = await Job.findOne({ _id: jobId });
-
-  // 6. If job is not found throw error
-  if (!job) {
-    throw new NotFoundError(`No job with id ${jobId}`);
-  }
-
-  // 7. Check permissions of the user created the job
-  checkPermissions(req.user, job.createdBy);
-
-  // 8. Find and update the job, run validation & return a new document
   const updatedJob = await Job.findOneAndUpdate({ _id: jobId }, req.body, {
     new: true,
     runValidators: true,

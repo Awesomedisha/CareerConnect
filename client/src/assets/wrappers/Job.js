@@ -97,6 +97,38 @@ const Wrapper = styled.article`
     color: var(--red-dark);
     background: var(--red-light);
   }
+  .section-title {
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid var(--primary-500);
+    color: var(--primary-700);
+    grid-column: 1 / -1;
+    font-size: 1.25rem;
+    font-weight: 600;
+  }
+  .textarea-container {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    @media (min-width: 992px) {
+      grid-template-columns: 1fr 1fr 1fr;
+    }
+  }
+  .text-area {
+    height: 150px;
+    resize: none;
+  }
+  .checkbox-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    .checkbox {
+      width: 20px;
+      height: 20px;
+    }
+  }
   &:hover .actions {
     visibility: visible;
   }

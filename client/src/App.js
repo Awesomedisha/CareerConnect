@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Error, Landing, ProtectedRoute, Register } from './pages';
-import { AddJob, AllJobs, Profile, SharedLayout, Stats, HRDashboard, JobMarket } from './pages/Dashboard';
+import { AddJob, AllJobs, Profile, SharedLayout, Stats, HRDashboard, JobMarket, MyApplications } from './pages/Dashboard';
 
 function App() {
   return (
@@ -20,6 +20,7 @@ function App() {
           <Route path="profile" element={<Profile />} />
           <Route path="hr-dashboard" element={<HRDashboard />} />
           <Route path="job-market" element={<JobMarket />} />
+          <Route path="my-applications" element={<MyApplications />} />
         </Route>
 
         <Route path="/register" element={<Register />} />

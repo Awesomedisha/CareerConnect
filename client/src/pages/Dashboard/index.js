@@ -5,6 +5,7 @@ import SharedLayout from './SharedLayout.js';
 import Stats from './Stats.js';
 import HRDashboard from './HRDashboard.js';
 import JobMarket from './JobMarket.js';
+import MyApplications from './MyApplications.js';
 
 export {
   AddJob,
@@ -14,4 +15,5 @@ export {
   Stats,
   HRDashboard,
   JobMarket,
+  MyApplications,
 }

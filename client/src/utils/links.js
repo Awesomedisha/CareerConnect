@@ -43,6 +43,13 @@ const links = [
     icon: <FaGlobeAmericas />,
     role: 'seeker',
   },
+  {
+    id: 7,
+    text: 'my applications',
+    path: 'my-applications',
+    icon: <FaWpforms />,
+    role: 'seeker',
+  },
 ];
 
 export default links;

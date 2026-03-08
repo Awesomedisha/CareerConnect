@@ -39,6 +39,9 @@ import {
   GET_APPLICATIONS_SUCCESS,
   UPDATE_APPLICATION_STATUS_BEGIN,
   UPDATE_APPLICATION_STATUS_SUCCESS,
+  GET_PREDICTED_FIT_BEGIN,
+  GET_PREDICTED_FIT_SUCCESS,
+  GET_PREDICTED_FIT_ERROR,
 } from "./actions";
 
 import { initialState } from './appContext.js';
@@ -184,14 +187,54 @@ function reducer(state, action) {
         company: '',
         jobLocation: state.userLocation,
         jobType: 'full-time',
-        status: 'pending',
-        isPublic: false,
+        status: 'open',
+        isPublic: true,
         requirements: '',
+        title: '',
+        jobRole: '',
+        jobCategory: '',
+        department: '',
+        jobId: '',
+        employmentType: '',
+        workMode: 'on-site',
+        locationCity: '',
+        locationState: '',
+        locationCountry: '',
+        locationAddress: '',
+        description: '',
+        responsibilities: '',
+        skillsRequired: '',
+        skillsPreferred: '',
+        techStack: '',
+        experienceMin: 0,
+        experienceMax: 0,
+        experienceLevel: 'entry',
+        educationRequired: '',
+        degreeRequired: '',
+        minimumCGPA: 0,
+        salaryMin: 0,
+        salaryMax: 0,
+        currency: 'USD',
+        salaryPeriod: 'monthly',
+        isNegotiable: false,
+        openings: 1,
+        benefits: '',
+        perks: '',
+        applicationMethod: '',
+        externalApplyLink: '',
+        applicationDeadline: '',
+        expectedJoiningDate: '',
+        interviewRounds: 1,
+        interviewProcess: '',
+        assessmentRequired: false,
+        isFeatured: false,
+        isUrgent: false,
+        tags: '',
       };
 
       return {
         ...state,
-        ...initialState
+        ...initialState,
       };
     }
 
@@ -381,7 +424,7 @@ function reducer(state, action) {
       };
     }
     case GET_APPLICATIONS_BEGIN: {
-      return { ...state, isLoading: true, showAlert: false };
+      return { ...state, showAlert: false };
     }
     case GET_APPLICATIONS_SUCCESS: {
       return {
@@ -391,7 +434,7 @@ function reducer(state, action) {
       };
     }
     case UPDATE_APPLICATION_STATUS_BEGIN: {
-      return { ...state, isLoading: true };
+      return { ...state };
     }
     case UPDATE_APPLICATION_STATUS_SUCCESS: {
       return {
@@ -400,6 +443,22 @@ function reducer(state, action) {
         showAlert: true,
         alertType: 'success',
         alertText: 'Status Updated!',
+      };
+    }
+
+    case GET_PREDICTED_FIT_BEGIN: {
+      return { ...state, isLoading: true };
+    }
+    case GET_PREDICTED_FIT_SUCCESS: {
+      return { ...state, isLoading: false };
+    }
+    case GET_PREDICTED_FIT_ERROR: {
+      return {
+        ...state,
+        isLoading: false,
+        showAlert: true,
+        alertType: 'danger',
+        alertText: action.payload.msg,
       };
     }
 

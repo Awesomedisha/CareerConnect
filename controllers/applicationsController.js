@@ -31,31 +31,51 @@ const getAIFit = async (jobRequirements, userProfile) => {
     try {
         const model = genAI.getGenerativeModel({ model: "gemini-pro" });
         const prompt = `
-            Analyze the fit between a job seeker and a job opening.
+            Analyze the fit between a job seeker and a job opening with high precision.
             
             Job Requirements:
             ${jobRequirements}
             
-            User Profile (Bio and Resume):
+            User Profile:
             ${userProfile}
             
-            Based on this, provide:
-            1. A fit score from 0 to 100.
-            2. A brief feedback explaining why (max 2 sentences).
+            Provide a deep analysis including:
+            1. Overall score (0-100).
+            2. Technical match score (0-100).
+            3. Soft skills match score (0-100).
+            4. Experience match score (0-100).
+            5. A concise feedback summary.
+            6. A gap analysis (what is missing).
+            7. Specific upskilling suggestions.
             
             Return ONLY a JSON object like this:
-            { "score": 85, "feedback": "Your experience matches the technical requirements well, though you lack specific industry experience." }
+            { 
+              "score": 85, 
+              "technicalFit": 90, 
+              "softSkillsFit": 80, 
+              "experienceFit": 70, 
+              "feedback": "Strong technical background, but needs more leadership experience.",
+              "gapAnalysis": "Lacks experience with team management and large-scale deployments.",
+              "upskillingSuggestions": "Consider taking a course on Agile Leadership or Project Management."
+            }
         `;
 
         const result = await model.generateContent(prompt);
         const response = await result.response;
         const text = response.text();
-        // Clean text in case of markdown blocks
         const jsonStr = text.replace(/```json|```/g, '').trim();
         return JSON.parse(jsonStr);
     } catch (error) {
         console.error('AI Fit Error:', error);
-        return { score: 0, feedback: 'AI analysis unavailable at the moment.' };
+        return {
+            score: 0,
+            technicalFit: 0,
+            softSkillsFit: 0,
+            experienceFit: 0,
+            feedback: 'AI analysis unavailable at the moment.',
+            gapAnalysis: 'N/A',
+            upskillingSuggestions: 'N/A'
+        };
     }
 };
 
@@ -94,14 +114,19 @@ const applyToJob = async (req, res) => {
         job: jobId,
         user: req.user.userId,
         aiFitScore: aiFit.score,
+        technicalFit: aiFit.technicalFit,
+        softSkillsFit: aiFit.softSkillsFit,
+        experienceFit: aiFit.experienceFit,
         aiFeedback: aiFit.feedback,
+        aiGapAnalysis: aiFit.gapAnalysis,
+        aiUpskillingSuggestions: aiFit.upskillingSuggestions,
     });
 
     // Send Email Notification
     await sendEmail(
         user.email,
         'Application Received',
-        `Hi ${user.name},\n\nThank you for applying for the ${job.position} position at ${job.company}.\n\nOur AI has analyzed your fit score as ${aiFit.score}/100.\nFeedback: ${aiFit.feedback}\n\nYou will be contacted shortly.\n\nBest regards,\nThe ${job.company} Team`
+        `Hi ${user.name},\n\nThank you for applying for the ${job.position} position at ${job.company}.\n\nOur AI has analyzed your fit score as ${aiFit.score}/100.\n\nFeedback: ${aiFit.feedback}\n\nYou will be contacted shortly.\n\nBest regards,\nThe ${job.company} Team`
     );
 
     res.status(StatusCodes.CREATED).json({ application });
@@ -151,9 +176,30 @@ const updateApplicationStatus = async (req, res) => {
     res.status(StatusCodes.OK).json({ application });
 };
 
+const getPredictedFit = async (req, res) => {
+    const { jobId } = req.body;
+
+    if (!jobId) {
+        throw new BadRequestError('Please provide job ID');
+    }
+
+    const job = await Job.findOne({ _id: jobId });
+    if (!job) {
+        throw new NotFoundError(`No job with id: ${jobId}`);
+    }
+
+    const user = await User.findOne({ _id: req.user.userId });
+    const profileText = `Bio: ${user.bio || 'N/A'}\nResume: ${user.resume || 'N/A'}`;
+
+    const aiFit = await getAIFit(job.requirements || 'N/A', profileText);
+
+    res.status(StatusCodes.OK).json({ aiFit });
+};
+
 export {
     applyToJob,
     getJobApplications,
     getMyApplications,
     updateApplicationStatus,
+    getPredictedFit,
 };
