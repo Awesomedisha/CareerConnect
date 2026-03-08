@@ -217,4 +217,13 @@ const logout = async (req, res) => {
   });
 };
 
-export { register, login, updateUser, getCurrentUser, logout }
+const authController = {
+  register,
+  login,
+  updateUser,
+  getCurrentUser,
+  logout,
+};
+
+export { register, login, updateUser, getCurrentUser, logout };
+export default authController;
