@@ -3,6 +3,10 @@
   publish = "public"
   functions = "netlify/functions"
 
+[functions]
+  node_bundler = "esbuild"
+  external_node_modules = ["mongoose"]
+
 [[redirects]]
   from = "/api/v1/*"
   to = "/.netlify/functions/api"
