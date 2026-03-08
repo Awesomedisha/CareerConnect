@@ -246,5 +246,13 @@
     "role": "hr",
     "_id": "1772974346731",
     "createdAt": "2026-03-08T12:52:26.731Z"
+  },
+  {
+    "name": "Maya",
+    "email": "maya@gmail.com",
+    "password": "H1a2r3t9@",
+    "role": "hr",
+    "_id": "69ad8d744bb88ba692c36025",
+    "createdAt": "2026-03-08T14:53:40.808Z"
   }
 ]

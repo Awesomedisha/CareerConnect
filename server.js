@@ -4,9 +4,7 @@ const app = express();
 import dotenv from 'dotenv';
 dotenv.config();
 
-// express-async-errors 
 import 'express-async-errors';
-
 import morgan from 'morgan';
 
 // Database and Authentication
@@ -32,61 +30,61 @@ import fs from 'fs';
 // Security Packages
 import helmet from 'helmet';
 import mongoSanitize from 'express-mongo-sanitize';
-
-// Cookie Parser
 import cookieParser from 'cookie-parser';
 
 const port = process.env.PORT || 4000;
 const PROJECT_ROOT = dirname(fileURLToPath(import.meta.url));
 const isServerless =
-  process.env.VERCEL === '1' ||
-  !!process.env.VERCEL ||
   !!process.env.NETLIFY ||
+  !!process.env.VERCEL ||
   !!process.env.LAMBDA_TASK_ROOT;
 
+// ─── Core Middleware ──────────────────────────────────────────────────────────
 app.use(express.json());
 app.use(cookieParser());
 app.use(helmet());
 app.use(mongoSanitize());
 
-if (process.env.NODE_ENV !== 'production' || isServerless) {
+if (process.env.NODE_ENV !== 'production') {
   app.use(morgan('dev'));
 }
 
-// Routes
+// ─── DB Connection for Serverless (MUST come BEFORE routes) ──────────────────
+let dbConnected = false;
+if (isServerless) {
+  app.use(async (req, res, next) => {
+    if (!dbConnected) {
+      const mongoUrl = process.env.MONGO_URL || process.env.MONGO_URI;
+      if (!mongoUrl) {
+        console.error('CRITICAL: MONGO_URL/MONGO_URI env var is missing!');
+        return res.status(500).json({ msg: 'Database URL not configured. Please set MONGO_URL in Netlify environment variables.' });
+      }
+      try {
+        console.log('Serverless: Connecting to MongoDB...');
+        await connectDB(mongoUrl);
+        dbConnected = true;
+        console.log('Serverless: MongoDB connected.');
+      } catch (err) {
+        console.error('Serverless: MongoDB connection failed:', err.message);
+        return res.status(500).json({ msg: 'Database connection failed. If on Netlify, whitelist 0.0.0.0/0 in MongoDB Atlas.' });
+      }
+    }
+    next();
+  });
+}
+
+// ─── Routes ───────────────────────────────────────────────────────────────────
 app.get('/api/v1', (req, res) => {
-  res.send('Hello from CareerConnect API');
+  res.json({ status: 'ok', msg: 'CareerConnect API is running' });
 });
 
 app.get('/api/v1/health', async (req, res) => {
   const dbStatus = mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected';
-
-  // Dynamic imports to check types without crashing initialization if possible
-  let authTypes = {};
-  try {
-    const auth = await import('./controllers/authController.js');
-    authTypes = {
-      register: typeof auth.register,
-      login: typeof auth.login,
-      updateUser: typeof auth.updateUser,
-    };
-  } catch (e) {
-    authTypes = { error: e.message };
-  }
-
   res.status(200).json({
     status: 'ok',
     database: dbStatus,
-    environment: isServerless ? 'serverless' : 'server',
+    environment: isServerless ? 'serverless' : 'local',
     platform: process.env.NETLIFY ? 'Netlify' : (process.env.VERCEL ? 'Vercel' : 'Local'),
-    diagnostics: {
-      authController: authTypes,
-      middleware: {
-        authenticateUser: typeof authenticateUser,
-        notFoundMiddleware: typeof notFoundMiddleware,
-        errorHandlerMiddleware: typeof errorHandlerMiddleware
-      }
-    }
   });
 });
 
@@ -94,33 +92,7 @@ app.use('/api/v1/auth', authRouter);
 app.use('/api/v1/jobs', authenticateUser, jobsRouter);
 app.use('/api/v1/applications', authenticateUser, applicationsRouter);
 
-// Database Connection Middleware for Serverless
-// This ensures the DB is connected before processing requests without calling app.listen()
-let dbConnected = false;
-if (isServerless) {
-  app.use(async (req, res, next) => {
-    if (!dbConnected) {
-      const mongoUrl = process.env.MONGO_URL || process.env.MONGO_URI;
-      if (!mongoUrl) {
-        console.error('CRITICAL ERROR: MONGO_URL or MONGO_URI environment variable is missing for serverless function.');
-        return res.status(500).json({ msg: 'Server configuration error: Database URL missing.' });
-      }
-      try {
-        console.log('Serverless: Attempting to connect to MongoDB...');
-        await connectDB(mongoUrl);
-        dbConnected = true;
-        console.log('Serverless: MongoDB connected successfully.');
-      } catch (error) {
-        console.error('Serverless: MongoDB connection failed:', error);
-        return res.status(500).json({ msg: 'Database connection failed. Please check server logs.' });
-      }
-    }
-    next();
-  });
-}
-
-// Static Assets & Catch-all (Only when NOT on Serverless)
-// Platforms like Vercel/Netlify handle static assets via CDN
+// ─── Static Files (Local only — Netlify/Vercel serve via CDN) ─────────────────
 if (!isServerless) {
   const buildPath = path.resolve(PROJECT_ROOT, './client/build');
   if (fs.existsSync(buildPath)) {
@@ -131,33 +103,28 @@ if (!isServerless) {
   }
 }
 
+// ─── Error Handling ───────────────────────────────────────────────────────────
 app.use(notFoundMiddleware);
 app.use(errorHandlerMiddleware);
 
+// ─── Local Server Start ───────────────────────────────────────────────────────
 const start = async () => {
-  try {
-    if (!mongoUrl) {
-      console.error('CRITICAL: MONGO_URL/MONGO_URI is missing!');
-      if (!isServerless) throw new Error('MONGO_URL or MONGO_URI environment variable not found');
-      return;
-    }
+  if (isServerless) return; // Serverless: no need to call app.listen()
 
-    // Only connect here if NOT in serverless middleware mode (which handles its own connection)
-    if (!isServerless) {
-      console.log('Localhost: Connecting to MongoDB...');
-      await connectDB(mongoUrl);
-      console.log('Localhost: DB Connected.');
-      app.listen(port, () => {
-        console.log(`Server is listening on port ${port}...`);
-      });
-    }
+  try {
+    const mongoUrl = process.env.MONGO_URL || process.env.MONGO_URI;
+    if (!mongoUrl) throw new Error('MONGO_URL or MONGO_URI environment variable not found');
+
+    console.log('Localhost: Connecting to MongoDB...');
+    await connectDB(mongoUrl);
+    console.log('Localhost: DB Connected.');
+    app.listen(port, () => {
+      console.log(`Server is listening on port ${port}...`);
+    });
   } catch (error) {
-    console.error('CRITICAL: Database connection failed!');
-    console.error('Error Details:', error.message);
-    if (isServerless) {
-      console.error('HINT: For Netlify/Vercel, ensure you have whitelisted 0.0.0.0/0 in MongoDB Atlas.');
-    }
-    if (!isServerless) process.exit(1);
+    console.error('CRITICAL: Server startup failed!');
+    console.error('Error:', error.message);
+    process.exit(1);
   }
 };
 
