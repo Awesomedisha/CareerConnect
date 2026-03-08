@@ -1,26 +1,162 @@
 [
   {
-    "name": "Test User",
-    "email": "test@example.com",
-    "password": "password123",
-    "role": "seeker",
-    "_id": "1772969919934",
-    "createdAt": "2026-03-08T11:38:39.934Z"
+    "name": "Disha Singh",
+    "email": "urdishasingh@gmail.com",
+    "password": "Disha123",
+    "role": "hr",
+    "_id": "seed-disha-123",
+    "createdAt": "2026-03-08T12:00:00.000Z"
   },
   {
-    "name": "Local Fix Test",
-    "email": "localfix@test.com",
+    "name": "Jagjeet Singh",
+    "email": "urjagjeetsingh@gmail.com",
+    "password": "H1a2r3t9@",
+    "role": "hr",
+    "_id": "seed-jagjeet-456",
+    "createdAt": "2026-03-08T12:00:00.000Z"
+  },
+  {
+    "name": "Test Seeker 1",
+    "email": "test1@example.com",
     "password": "password123",
     "role": "seeker",
-    "_id": "69ad60789d8804ce7699987c",
-    "createdAt": "2026-03-08T11:41:44.351Z"
+    "_id": "seed-seeker-1",
+    "createdAt": "2026-03-08T12:00:00.000Z"
+  },
+  {
+    "name": "Test HR 2",
+    "email": "test2@example.com",
+    "password": "password123",
+    "role": "hr",
+    "_id": "seed-hr-2",
+    "createdAt": "2026-03-08T12:00:00.000Z"
+  },
+  {
+    "name": "Test Seeker 3",
+    "email": "test3@example.com",
+    "password": "password123",
+    "role": "seeker",
+    "_id": "seed-seeker-3",
+    "createdAt": "2026-03-08T12:00:00.000Z"
+  },
+  {
+    "name": "Test HR 4",
+    "email": "test4@example.com",
+    "password": "password123",
+    "role": "hr",
+    "_id": "seed-hr-4",
+    "createdAt": "2026-03-08T12:00:00.000Z"
+  },
+  {
+    "name": "Test Seeker 5",
+    "email": "test5@example.com",
+    "password": "password123",
+    "role": "seeker",
+    "_id": "seed-seeker-5",
+    "createdAt": "2026-03-08T12:00:00.000Z"
+  },
+  {
+    "name": "Test HR 6",
+    "email": "test6@example.com",
+    "password": "password123",
+    "role": "hr",
+    "_id": "seed-hr-6",
+    "createdAt": "2026-03-08T12:00:00.000Z"
+  },
+  {
+    "name": "Test Seeker 7",
+    "email": "test7@example.com",
+    "password": "password123",
+    "role": "seeker",
+    "_id": "seed-seeker-7",
+    "createdAt": "2026-03-08T12:00:00.000Z"
+  },
+  {
+    "name": "Test HR 8",
+    "email": "test8@example.com",
+    "password": "password123",
+    "role": "hr",
+    "_id": "seed-hr-8",
+    "createdAt": "2026-03-08T12:00:00.000Z"
   },
   {
     "name": "Disha Singh",
-    "email": "urdisha.final_v10@gmail.com",
+    "email": "urdishasingh@gmail.com",
+    "password": "Disha123",
+    "role": "hr",
+    "_id": "69ad682df773ab43c0985490",
+    "createdAt": "2026-03-08T12:14:37.969Z"
+  },
+  {
+    "name": "Jagjeet Singh",
+    "email": "urjagjeetsingh@gmail.com",
+    "password": "H1a2r3t9@",
+    "role": "hr",
+    "_id": "1772972078163",
+    "createdAt": "2026-03-08T12:14:38.164Z"
+  },
+  {
+    "name": "Test Seeker 1",
+    "email": "test1@example.com",
+    "password": "password123",
+    "role": "seeker",
+    "_id": "69ad682ef773ab43c0985497",
+    "createdAt": "2026-03-08T12:14:38.380Z"
+  },
+  {
+    "name": "Test HR 2",
+    "email": "test2@example.com",
     "password": "password123",
     "role": "hr",
-    "_id": "69ad63ce07d2241fe5b0959d",
-    "createdAt": "2026-03-08T11:55:58.806Z"
+    "_id": "69ad682ef773ab43c0985499",
+    "createdAt": "2026-03-08T12:14:38.574Z"
+  },
+  {
+    "name": "Test Seeker 3",
+    "email": "test3@example.com",
+    "password": "password123",
+    "role": "seeker",
+    "_id": "69ad682ef773ab43c098549b",
+    "createdAt": "2026-03-08T12:14:38.764Z"
+  },
+  {
+    "name": "Test HR 4",
+    "email": "test4@example.com",
+    "password": "password123",
+    "role": "hr",
+    "_id": "69ad682ef773ab43c098549d",
+    "createdAt": "2026-03-08T12:14:38.962Z"
+  },
+  {
+    "name": "Test Seeker 5",
+    "email": "test5@example.com",
+    "password": "password123",
+    "role": "seeker",
+    "_id": "69ad682ef773ab43c098549f",
+    "createdAt": "2026-03-08T12:14:39.157Z"
+  },
+  {
+    "name": "Test HR 6",
+    "email": "test6@example.com",
+    "password": "password123",
+    "role": "hr",
+    "_id": "69ad682ff773ab43c09854a1",
+    "createdAt": "2026-03-08T12:14:39.355Z"
+  },
+  {
+    "name": "Test Seeker 7",
+    "email": "test7@example.com",
+    "password": "password123",
+    "role": "seeker",
+    "_id": "69ad682ff773ab43c09854a3",
+    "createdAt": "2026-03-08T12:14:39.547Z"
+  },
+  {
+    "name": "Test HR 8",
+    "email": "test8@example.com",
+    "password": "password123",
+    "role": "hr",
+    "_id": "69ad682ff773ab43c09854a5",
+    "createdAt": "2026-03-08T12:14:39.740Z"
   }
 ]
