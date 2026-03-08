@@ -9,8 +9,6 @@ import {
   logout,
 } from '../controllers/authController.js';
 
-// ... (rest of imports)
-
 import authenticateUser from '../middleware/authenticate.js';
 
 import rateLimiter from 'express-rate-limit';
