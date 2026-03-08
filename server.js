@@ -77,13 +77,14 @@ let dbConnected = false;
 if (isServerless) {
   app.use(async (req, res, next) => {
     if (!dbConnected) {
-      if (!process.env.MONGO_URL) {
-        console.error('CRITICAL ERROR: MONGO_URL environment variable is missing for serverless function.');
+      const mongoUrl = process.env.MONGO_URL || process.env.MONGO_URI;
+      if (!mongoUrl) {
+        console.error('CRITICAL ERROR: MONGO_URL or MONGO_URI environment variable is missing for serverless function.');
         return res.status(500).json({ msg: 'Server configuration error: Database URL missing.' });
       }
       try {
         console.log('Serverless: Attempting to connect to MongoDB...');
-        await connectDB(process.env.MONGO_URL);
+        await connectDB(mongoUrl);
         dbConnected = true;
         console.log('Serverless: MongoDB connected successfully.');
       } catch (error) {
@@ -110,13 +111,16 @@ if (!isServerless) {
 app.use(notFoundMiddleware);
 app.use(errorHandlerMiddleware);
 
-const port = process.env.PORT || 4000;
+const mongoUrl = process.env.MONGO_URL || process.env.MONGO_URI;
 
 const start = async () => {
   try {
     // Only connect here if NOT in serverless middleware mode
     if (!isServerless) {
-      await connectDB(process.env.MONGO_URL);
+      if (!mongoUrl) {
+        throw new Error('Please provide MONGO_URL or MONGO_URI in .env file');
+      }
+      await connectDB(mongoUrl);
       app.listen(port, () => {
         console.log(`Server is listening on port ${port}...`);
       });
