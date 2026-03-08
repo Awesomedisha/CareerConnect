@@ -9,6 +9,8 @@ import {
     getPredictedFit,
 } from '../controllers/applicationsController.js';
 
+// No authenticateUser import here currently, keeping it clean.
+
 router.route('/').post(applyToJob).get(getMyApplications);
 router.route('/predicted-fit').post(getPredictedFit);
 router.route('/:jobId/applications').get(getJobApplications);

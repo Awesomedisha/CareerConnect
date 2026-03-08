@@ -19,9 +19,9 @@ import jobsRouter from './routes/jobsRoutes.js';
 import applicationsRouter from './routes/applicationsRoutes.js';
 
 // Middleware
-import notFoundMiddleware from './middleware/not-found.js';
-import errorHandlerMiddleware from './middleware/error-handler.js';
-import authenticateUser from './middleware/authenticate.js';
+import { notFoundMiddleware } from './middleware/not-found.js';
+import { errorHandlerMiddleware } from './middleware/error-handler.js';
+import { authenticateUser } from './middleware/authenticate.js';
 
 // Deployment
 import path from 'path';
@@ -57,13 +57,35 @@ app.get('/api/v1', (req, res) => {
   res.send('Hello from CareerConnect API');
 });
 
-app.get('/api/v1/health', (req, res) => {
+app.get('/api/v1/health', async (req, res) => {
   const dbStatus = mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected';
+
+  // Dynamic imports to check types without crashing initialization if possible
+  let authTypes = {};
+  try {
+    const auth = await import('./controllers/authController.js');
+    authTypes = {
+      register: typeof auth.register,
+      login: typeof auth.login,
+      updateUser: typeof auth.updateUser,
+    };
+  } catch (e) {
+    authTypes = { error: e.message };
+  }
+
   res.status(200).json({
     status: 'ok',
     database: dbStatus,
     environment: isServerless ? 'serverless' : 'server',
-    platform: process.env.NETLIFY ? 'Netlify' : (process.env.VERCEL ? 'Vercel' : 'Local')
+    platform: process.env.NETLIFY ? 'Netlify' : (process.env.VERCEL ? 'Vercel' : 'Local'),
+    diagnostics: {
+      authController: authTypes,
+      middleware: {
+        authenticateUser: typeof authenticateUser,
+        notFoundMiddleware: typeof notFoundMiddleware,
+        errorHandlerMiddleware: typeof errorHandlerMiddleware
+      }
+    }
   });
 });
 

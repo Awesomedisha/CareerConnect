@@ -7,7 +7,9 @@ import {
   updateJob,
   deleteJob,
   showStats,
-} from '../controllers/jobsController.js'
+} from '../controllers/jobsController.js';
+
+import { authenticateUser } from '../middleware/authenticate.js';
 
 router.route('/').post(createJob).get(getAllJobs);
 router.route('/stats').get(showStats);

@@ -1,6 +1,6 @@
 import { StatusCodes } from 'http-status-codes';
 
-const errorHandlerMiddleware = (err, req, res, next) => {
+export const errorHandlerMiddleware = (err, req, res, next) => {
   // Ensure actual error is visible in serverless logs (Netlify/Vercel)
   console.error('API Error Details:', err);
 
@@ -24,5 +24,3 @@ const errorHandlerMiddleware = (err, req, res, next) => {
 
   res.status(defaultError.statusCode).json({ msg: defaultError.msg });
 }
-
-export default errorHandlerMiddleware
