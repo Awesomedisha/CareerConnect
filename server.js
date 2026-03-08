@@ -47,6 +47,17 @@ if (fs.existsSync(buildPath)) {
   app.use(express.static(buildPath));
 }
 
+let dbConnected = false;
+if (process.env.VERCEL) {
+  app.use(async (req, res, next) => {
+    if (!dbConnected) {
+      await connectDB(process.env.MONGO_URL);
+      dbConnected = true;
+    }
+    next();
+  });
+}
+
 app.use(express.json());
 app.use(cookieParser());
 
@@ -90,6 +101,8 @@ const start = async () => {
   }
 };
 
-start();
+if (!process.env.VERCEL) {
+  start();
+}
 
 export default app;
