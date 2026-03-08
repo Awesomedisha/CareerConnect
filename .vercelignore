@@ -1,0 +1,12 @@
+node_modules
+client/node_modules
+client/build
+coverage
+.git
+.gitignore
+.vscode
+.idea
+*.log
+MOCK_DATA.json
+architectural-decision-log.md
+demo
