@@ -47,9 +47,10 @@ export default function Register() {
 
   useEffect(() => {
     if (user) {
+      // Snappier transition for a high-end feel
       setTimeout(() => {
         navigate('/');
-      }, 2500);
+      }, 1000);
     }
   }, [user, navigate]);
 

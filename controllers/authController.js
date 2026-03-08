@@ -9,18 +9,22 @@ const oneDay = 1000 * 60 * 60 * 24;
 export const register = async (req, res) => {
   const { name, email, password, role } = req.body;
 
-  if (!name || !email || !password) {
-    throw new BadRequestError("Please provide all values");
+  if (!email || !password || !name) {
+    throw new BadRequestError("Please provide name, email, and password");
   }
 
-  const userAlreadyExists = await findUserByEmail(email);
-  if (userAlreadyExists) {
-    throw new BadRequestError(`The email: ${email} is already in use.`);
+  const existingUser = await findUserByEmail(email);
+  if (existingUser) {
+    throw new BadRequestError("Account with this email already exists");
   }
 
-  const user = await saveUser({ name, email, password, role });
-  // token logic needs to handle both Mongoose models and plain JSON objects
-  const token = (user && user.createToken) ? user.createToken() : 'temp-token-for-%SERVER%';
+  // Create user - our UserStorage handles both MongoDB and JSON backup
+  const user = await saveUser({ name, email, password, role: role || 'seeker' });
+
+  // Generate token - support both Mongoose and plain objects
+  const token = (user && typeof user.createToken === 'function')
+    ? user.createToken()
+    : 'session_' + Date.now();
 
   res.cookie('token', token, {
     httpOnly: true,
@@ -29,13 +33,13 @@ export const register = async (req, res) => {
   });
 
   res.status(StatusCodes.CREATED).json({
-    user: user ? {
+    user: {
       email: user.email,
-      lastName: user.lastName || '',
+      name: user.name,
+      role: user.role,
       location: user.location || '',
-      name: user.name
-    } : { name, email },
-    location: user ? (user.location || '') : '',
+    },
+    location: user.location || '',
   });
 };
 
@@ -43,34 +47,37 @@ export const login = async (req, res) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
-    throw new BadRequestError("Please provide all values");
+    throw new BadRequestError("Please provide email and password");
   }
 
   const user = await findUserByEmail(email);
   if (!user) {
-    throw new UnAuthenticatedError("Invalid Credentials");
+    throw new UnAuthenticatedError("No account found with this email");
   }
 
   // Support both Mongoose models (comparePassword) and raw objects (direct comparison)
   let isPasswordCorrect = false;
-  if (user.comparePassword) {
+  if (user.comparePassword && typeof user.comparePassword === 'function') {
     isPasswordCorrect = await user.comparePassword(password);
   } else {
+    // For seeded/JSON users, we might have direct matching if bcrypt wasn't used
     isPasswordCorrect = (password === user.password);
   }
 
   if (!isPasswordCorrect) {
-    throw new UnAuthenticatedError("Invalid Credentials");
+    throw new UnAuthenticatedError("Invalid password. Please try again.");
   }
 
-  const token = (user && user.createToken) ? user.createToken() : 'temp-token-for-%SERVER%';
+  const token = (user && typeof user.createToken === 'function')
+    ? user.createToken()
+    : 'session_' + Date.now();
+
   res.cookie('token', token, {
     httpOnly: true,
     expires: new Date(Date.now() + oneDay),
     secure: process.env.NODE_ENV === 'production',
   });
 
-  // Handle Mongoose vs Plain object
   const userResponse = user.toObject ? user.toObject() : { ...user };
   delete userResponse.password;
 
