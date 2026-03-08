@@ -14,7 +14,13 @@ const register = async (req, res) => {
     throw new BadRequestError("Please provide all values");
   }
 
-  const userAlreadyExists = await User.findOne({ email });
+  let userAlreadyExists;
+  try {
+    userAlreadyExists = await User.findOne({ email });
+  } catch (error) {
+    console.error('Database query error (register):', error);
+    throw new Error('Database connection issue. Please ensure your IP is whitelisted in MongoDB Atlas.');
+  }
 
   if (userAlreadyExists) {
     throw new BadRequestError(`The email: ${email} is already in use.`);
@@ -49,7 +55,13 @@ const login = async (req, res) => {
   }
 
   // Get the user in db whose email matches with the one from request
-  const user = await User.findOne({ email }).select('+password');
+  let user;
+  try {
+    user = await User.findOne({ email }).select('+password');
+  } catch (error) {
+    console.error('Database query error (login):', error);
+    throw new Error('Database connection issue. Please ensure your IP is whitelisted in MongoDB Atlas.');
+  }
 
   if (!user) {
     throw new UnAuthenticatedError("Invalid Credentials");

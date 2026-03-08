@@ -60,6 +60,16 @@ app.get('/api/v1', (req, res) => {
   res.send('Hello from CareerConnect API');
 });
 
+app.get('/api/v1/health', (req, res) => {
+  const dbStatus = mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected';
+  res.status(200).json({
+    status: 'ok',
+    database: dbStatus,
+    environment: isServerless ? 'serverless' : 'server',
+    platform: process.env.NETLIFY ? 'Netlify' : (process.env.VERCEL ? 'Vercel' : 'Local')
+  });
+});
+
 app.use('/api/v1/auth', authRouter);
 app.use('/api/v1/jobs', authenticateUser, jobsRouter);
 app.use('/api/v1/applications', authenticateUser, applicationsRouter);
