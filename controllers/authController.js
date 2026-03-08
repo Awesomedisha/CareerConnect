@@ -5,14 +5,14 @@ import xssFilters from 'xss-filters';
 
 const oneDay = 1000 * 60 * 60 * 24;
 
-const register = async (req, res) => {
+export const register = async (req, res) => {
   const { name, email, password, role } = req.body;
 
   if (!name || !email || !password) {
     throw new BadRequestError("Please provide all values");
   }
 
-  let userAlreadyExists = await User.findOne({ email });
+  const userAlreadyExists = await User.findOne({ email });
   if (userAlreadyExists) {
     throw new BadRequestError(`The email: ${email} is already in use.`);
   }
@@ -37,7 +37,7 @@ const register = async (req, res) => {
   });
 };
 
-const login = async (req, res) => {
+export const login = async (req, res) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
@@ -69,7 +69,7 @@ const login = async (req, res) => {
   });
 };
 
-const updateUser = async (req, res) => {
+export const updateUser = async (req, res) => {
   const { email, name } = req.body;
 
   if (!email || !name) {
@@ -107,15 +107,18 @@ const updateUser = async (req, res) => {
   });
 };
 
-const getCurrentUser = async (req, res) => {
+export const getCurrentUser = async (req, res) => {
   const user = await User.findOne({ _id: req.user.userId });
+  if (!user) {
+    throw new UnAuthenticatedError("User not found");
+  }
   res.status(StatusCodes.OK).json({
     user,
     location: user.location
   });
 };
 
-const logout = async (req, res) => {
+export const logout = async (req, res) => {
   res.cookie('token', 'logout', {
     httpOnly: true,
     expires: new Date(Date.now() + 1000),
@@ -125,5 +128,3 @@ const logout = async (req, res) => {
     msg: 'User logged out!'
   });
 };
-
-export { register, login, updateUser, getCurrentUser, logout };
