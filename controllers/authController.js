@@ -19,7 +19,8 @@ export const register = async (req, res) => {
   }
 
   const user = await saveUser({ name, email, password, role });
-  const token = user ? user.createToken() : 'temp-token'; // Fallback token if only JSON saved
+  // token logic needs to handle both Mongoose models and plain JSON objects
+  const token = (user && user.createToken) ? user.createToken() : 'temp-token-for-%SERVER%';
 
   res.cookie('token', token, {
     httpOnly: true,
@@ -30,11 +31,11 @@ export const register = async (req, res) => {
   res.status(StatusCodes.CREATED).json({
     user: user ? {
       email: user.email,
-      lastName: user.lastName,
-      location: user.location,
+      lastName: user.lastName || '',
+      location: user.location || '',
       name: user.name
     } : { name, email },
-    location: user ? user.location : 'local',
+    location: user ? (user.location || '') : '',
   });
 };
 
@@ -50,27 +51,33 @@ export const login = async (req, res) => {
     throw new UnAuthenticatedError("Invalid Credentials");
   }
 
-  // Support both Mongoose models and raw objects
-  const isPasswordCorrect = user.comparePassword ? await user.comparePassword(password) : (password === user.password);
+  // Support both Mongoose models (comparePassword) and raw objects (direct comparison)
+  let isPasswordCorrect = false;
+  if (user.comparePassword) {
+    isPasswordCorrect = await user.comparePassword(password);
+  } else {
+    isPasswordCorrect = (password === user.password);
+  }
+
   if (!isPasswordCorrect) {
     throw new UnAuthenticatedError("Invalid Credentials");
   }
 
-  const token = user.createToken ? user.createToken() : 'temp-token';
+  const token = (user && user.createToken) ? user.createToken() : 'temp-token-for-%SERVER%';
   res.cookie('token', token, {
     httpOnly: true,
     expires: new Date(Date.now() + oneDay),
     secure: process.env.NODE_ENV === 'production',
   });
 
-  if (user.toObject) {
-    const userObj = user.toObject();
-    delete userObj.password;
-    res.status(StatusCodes.OK).json({ user: userObj, location: user.location });
-  } else {
-    delete user.password;
-    res.status(StatusCodes.OK).json({ user, location: user.location });
-  }
+  // Handle Mongoose vs Plain object
+  const userResponse = user.toObject ? user.toObject() : { ...user };
+  delete userResponse.password;
+
+  res.status(StatusCodes.OK).json({
+    user: userResponse,
+    location: user.location || ''
+  });
 };
 
 export const updateUser = async (req, res) => {
@@ -80,15 +87,15 @@ export const updateUser = async (req, res) => {
     throw new BadRequestError("Please provide essential values (name, email)");
   }
 
+  // Update only works for MongoDB currently, or we'd need to update the JSON
   const user = await User.findOne({ _id: req.user.userId });
   if (!user) {
-    throw new UnAuthenticatedError("User not found");
+    throw new UnAuthenticatedError("Update not supported for JSON-only users currently");
   }
 
   user.email = email;
   user.name = xssFilters.inHTMLData(name);
 
-  // Apply other fields...
   const fields = ['firstName', 'lastName', 'fullName', 'phone', 'location', 'city', 'state', 'country', 'profilePicture', 'headline', 'bio'];
   fields.forEach(field => {
     if (req.body[field] !== undefined) {
@@ -114,7 +121,11 @@ export const updateUser = async (req, res) => {
 export const getCurrentUser = async (req, res) => {
   const user = await User.findOne({ _id: req.user.userId });
   if (!user) {
-    throw new UnAuthenticatedError("User not found");
+    // Try JSON fallback for current user if userId matches
+    const fallbackUser = await findUserByEmail(req.user.email); // Need to add email to payload if we want this
+    if (!fallbackUser) throw new UnAuthenticatedError("User not found");
+    res.status(StatusCodes.OK).json({ user: fallbackUser, location: '' });
+    return;
   }
   res.status(StatusCodes.OK).json({
     user,
