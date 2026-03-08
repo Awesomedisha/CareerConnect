@@ -11,16 +11,17 @@ export default function Stats() {
 
   useEffect(() => {
     showStats();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  if(isLoading){
+  if (isLoading) {
     return <Loading center />;
   }
 
   return (
     <>
       <StatsContainer />
-      { monthlyApplications.length > 0 && <ChartsContainer />}
+      {monthlyApplications.length > 0 && <ChartsContainer />}
     </>
   );
 }

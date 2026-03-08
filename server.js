@@ -40,29 +40,42 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const isVercel = process.env.VERCEL === '1' || !!process.env.VERCEL;
+const isServerless = process.env.VERCEL === '1' || !!process.env.VERCEL || !!process.env.NETLIFY;
 
 app.use(express.json());
 app.use(cookieParser());
 app.use(helmet());
 app.use(mongoSanitize());
 
-if (process.env.NODE_ENV !== 'production') {
+if (process.env.NODE_ENV !== 'production' && !isServerless) {
   app.use(morgan('dev'));
 }
 
 // Routes
 app.get('/api/v1', (req, res) => {
-  res.send('Hello');
+  res.send('Hello from CareerConnect API');
 });
 
 app.use('/api/v1/auth', authRouter);
 app.use('/api/v1/jobs', authenticateUser, jobsRouter);
 app.use('/api/v1/applications', authenticateUser, applicationsRouter);
 
-// Static Assets & Catch-all (Only when NOT on Vercel)
-// Vercel handles static assets and routing at the Edge (CDN)
-if (!isVercel) {
+// Database Connection Middleware for Serverless
+// This ensures the DB is connected before processing requests without calling app.listen()
+let dbConnected = false;
+if (isServerless) {
+  app.use(async (req, res, next) => {
+    if (!dbConnected) {
+      await connectDB(process.env.MONGO_URL);
+      dbConnected = true;
+    }
+    next();
+  });
+}
+
+// Static Assets & Catch-all (Only when NOT on Serverless)
+// Platforms like Vercel/Netlify handle static assets via CDN
+if (!isServerless) {
   const buildPath = path.resolve(__dirname, './client/build');
   if (fs.existsSync(buildPath)) {
     app.use(express.static(buildPath));
@@ -79,15 +92,15 @@ const port = process.env.PORT || 4000;
 
 const start = async () => {
   try {
-    await connectDB(process.env.MONGO_URL);
-    // On Vercel, the function is executed upon request, we don't call app.listen()
-    if (!isVercel) {
+    // Only connect here if NOT in serverless middleware mode
+    if (!isServerless) {
+      await connectDB(process.env.MONGO_URL);
       app.listen(port, () => {
         console.log(`Server is listening on port ${port}...`);
       });
     }
   } catch (error) {
-    console.error(error);
+    console.error('Startup Error:', error);
   }
 };
 

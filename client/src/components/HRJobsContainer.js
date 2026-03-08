@@ -10,13 +10,12 @@ export default function HRJobsContainer() {
     useEffect(() => {
         // For HR, we show their own jobs (which might be public or private)
         getJobs();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     if (isLoading) {
         return <Loading center />;
     }
-
-    const publicJobsCount = jobs.filter(j => j.isPublic).length;
 
     return (
         <Wrapper>

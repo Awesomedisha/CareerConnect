@@ -16,6 +16,7 @@ export default function Navbar() {
     if (userRole === 'seeker') {
       getApplications('userApplications');
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const recentNotifications = userApplications

@@ -11,7 +11,8 @@ export default function Profile() {
   const [name, setName] = useState(user?.name || '');
   const [firstName, setFirstName] = useState(user?.firstName || '');
   const [lastName, setLastName] = useState(user?.lastName || '');
-  const [fullName, setFullName] = useState(user?.fullName || '');
+  // fullName is typically derived from first and last name
+  const fullName = `${firstName} ${lastName}`.trim();
   const [email, setEmail] = useState(user?.email || '');
   const [phone, setPhone] = useState(user?.phone || '');
   const [location, setLocation] = useState(user?.location || '');
@@ -167,8 +168,26 @@ export default function Profile() {
         <div className="form-center">
           <FormRow type='text' name='preferredJobRole' value={preferredJobRole} labelText="Preferred Job Role" handleChange={(e) => setPreferredJobRole(e.target.value)} />
           <FormRow type='text' name='preferredLocations' value={preferredLocations} labelText="Preferred Locations" handleChange={(e) => setPreferredLocations(e.target.value)} />
+          <div className='form-row'>
+            <label htmlFor='preferredJobType' className='form-label'>Preferred Job Type</label>
+            <select name='preferredJobType' value={preferredJobType} onChange={(e) => setPreferredJobType(e.target.value)} className='form-select'>
+              <option value="full-time">Full-time</option>
+              <option value="part-time">Part-time</option>
+              <option value="internship">Internship</option>
+              <option value="contract">Contract</option>
+            </select>
+          </div>
+          <div className='form-row'>
+            <label htmlFor='preferredWorkMode' className='form-label'>Preferred Work Mode</label>
+            <select name='preferredWorkMode' value={preferredWorkMode} onChange={(e) => setPreferredWorkMode(e.target.value)} className='form-select'>
+              <option value="on-site">On-site</option>
+              <option value="remote">Remote</option>
+              <option value="hybrid">Hybrid</option>
+            </select>
+          </div>
           <FormRow type='number' name='expectedSalaryMin' value={expectedSalaryMin} labelText="Min Expected Salary" handleChange={(e) => setExpectedSalaryMin(e.target.value)} />
           <FormRow type='number' name='expectedSalaryMax' value={expectedSalaryMax} labelText="Max Expected Salary" handleChange={(e) => setExpectedSalaryMax(e.target.value)} />
+          <FormRow type='text' name='noticePeriod' value={noticePeriod} labelText="Notice Period (e.g. 1 month)" handleChange={(e) => setNoticePeriod(e.target.value)} />
           <div className='form-row checkbox-row' style={{ gridColumn: 'span 1' }}>
             <label htmlFor='immediateJoiner' className='form-label'>Immediate Joiner</label>
             <input type='checkbox' name='immediateJoiner' checked={immediateJoiner} onChange={(e) => setImmediateJoiner(e.target.checked)} className='form-input checkbox' />

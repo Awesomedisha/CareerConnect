@@ -30,6 +30,7 @@ export default function AddJob() {
     if (user?.role === 'hr' && !isEditing) {
       handleChange({ name: 'isPublic', value: true });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleSubmit = (e) => {

@@ -22,13 +22,14 @@ export default function JobsContainer() {
 
   useEffect(() => {
     getJobs();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search, searchStatus, searchType, sort, page]);
 
   if (isLoading) {
     return <Loading center />;
   }
 
-  if( jobs.length === 0 ){
+  if (jobs.length === 0) {
     return (
       <Wrapper>
         <h2>No Jobs to display...</h2>
@@ -49,7 +50,7 @@ export default function JobsContainer() {
 
       {/* pagination */}
       {numOfPages > 1 && <PageBtnContainer />}
-      
+
     </Wrapper>
   );
 }
