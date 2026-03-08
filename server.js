@@ -26,6 +26,7 @@ import authenticateUser from './middleware/authenticate.js';
 import path from 'path';
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
+import fs from 'fs';
 
 // Security Packages
 import helmet from 'helmet';
@@ -40,8 +41,11 @@ if (process.env.NODE_ENV !== 'production') {
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-// Only for Deployment
-app.use(express.static(path.resolve(__dirname, './client/build')));
+// Only for Deployment - check if build directory exists
+const buildPath = path.resolve(__dirname, './client/build');
+if (fs.existsSync(buildPath)) {
+  app.use(express.static(buildPath));
+}
 
 app.use(express.json());
 app.use(cookieParser());
@@ -60,7 +64,12 @@ app.use('/api/v1/applications', authenticateUser, applicationsRouter);
 
 // Only for Deployment
 app.get('*', function (request, response) {
-  response.sendFile(path.resolve(__dirname, './client/build', 'index.html'));
+  const indexPath = path.resolve(__dirname, './client/build', 'index.html');
+  if (fs.existsSync(indexPath)) {
+    response.sendFile(indexPath);
+  } else {
+    response.status(404).json({ msg: 'Build not available' });
+  }
 });
 
 app.use(notFoundMiddleware);
